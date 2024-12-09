@@ -2,6 +2,7 @@
 pragma solidity ^0.8.18;
 
 contract GigContract {
+    uint256 public gigId;
     address public client;
     address public freelancer;
     string public description;
@@ -28,17 +29,17 @@ contract GigContract {
 
     mapping(address => bool) public hasApplied;
 
-    event GigApplied(address indexed freelancer, string proposal, uint256 timestamp);
-    event GigAccepted(address indexed freelancer, string attestationUID, uint256 timestamp);
-    event WorkSubmitted(bytes32 indexed workHash, uint256 aiScore, string aiAttestationUID, uint256 timestamp);
-    event DisputeRaised(address indexed disputingParty, string disputeAttestationUID, string description, uint256 timestamp);
+    event GigApplied(uint256 indexed gigId,address indexed freelancer, string proposal);
+    event GigAccepted(uint256 indexed gigId,address indexed freelancer, string attestationUID);
+    event WorkSubmitted(uint256 indexed gigId,bytes32 indexed workHash, uint256 aiScore, string aiAttestationUID);
+    event DisputeRaised(uint256 indexed gigId,address indexed disputingParty, string disputeAttestationUID, string description);
     event DisputeResolved(
+        uint256 indexed gigId,
         string indexed disputeAttestationUID,
         string decision,
-        uint256 payout,
-        uint256 timestamp
+        uint256 payout
     );
-    event PaymentReleased(address indexed recipient, uint256 amount, uint256 timestamp);
+    event PaymentReleased(uint256 indexed gigId,address indexed recipient, uint256 amount);
 
     modifier onlyClient() {
         require(msg.sender == client, "Only client can call this function");
@@ -55,19 +56,21 @@ contract GigContract {
         _;
     }
 
-    modifier onlyTrustGigz(){
-        require(msg.sender == 0x4b4b30e2E7c6463b03CdFFD6c42329D357205334,"Only TrustGigz Platform can resolve the dispute");
-        _;
-    }
+    // modifier onlyTrustGigz(){
+    //     require(msg.sender == 0x4b4b30e2E7c6463b03CdFFD6c42329D357205334,"Only TrustGigz Platform can resolve the dispute");
+    //     _;
+    // }
 
     constructor(
         address _client,
+        uint256 _gigId,
         string memory _description,
         uint256 _budget,
         uint256 _deadline
     ) payable {
         require(msg.value == _budget, "Initial deposit must match the budget");
         client = _client;
+        gigId = _gigId;
         description = _description;
         budget = _budget;
         deadline = _deadline;
@@ -84,7 +87,7 @@ contract GigContract {
         }));
 
         hasApplied[msg.sender] = true;
-        emit GigApplied(msg.sender, proposal, block.timestamp);
+        emit GigApplied(gigId,msg.sender, proposal);
     }
 
     function chooseFreelancer(uint256 applicantIndex, string calldata _attestationUID) 
@@ -99,7 +102,7 @@ contract GigContract {
         attestationUID = _attestationUID;
         isAccepted = true;
 
-        emit GigAccepted(freelancer, attestationUID, block.timestamp);
+        emit GigAccepted(gigId,freelancer, attestationUID);
     }
 
     function submitWork(
@@ -113,7 +116,7 @@ contract GigContract {
         aiScore = _aiScore;
         aiAttestationUID = _aiAttestationUID;
 
-        emit WorkSubmitted(workHash, aiScore, aiAttestationUID, block.timestamp);
+        emit WorkSubmitted(gigId,workHash, aiScore, aiAttestationUID);
     }
 
     function raiseDispute(
@@ -128,13 +131,13 @@ contract GigContract {
         disputeDescription = _description;
         disputeAttestationUID = _disputeAttestationUID;
 
-        emit DisputeRaised(msg.sender, _disputeAttestationUID, _description, block.timestamp);
+        emit DisputeRaised(gigId,msg.sender, _disputeAttestationUID, _description);
     }
 
     function resolveDispute(
     uint256 clientVotePercentage, // Average percentage of votes in favor of the client (0-100)
     uint256 freelancerVotePercentage // Average percentage of votes in favor of the freelancer (0-100)
-) external onlyTrustGigz {
+) external  {
     require(isDisputed, "No dispute to resolve");
     require(clientVotePercentage + freelancerVotePercentage == 100, "Vote percentages must add up to 100");
     require(aiScore <= 100, "AI Score must be within 0 to 100");
@@ -155,13 +158,13 @@ contract GigContract {
         isCompleted = true;
         payout = fundsDeposited;
         payable(freelancer).transfer(fundsDeposited);
-        emit DisputeResolved( disputeAttestationUID,"In favor of Freelancer", payout, block.timestamp);
+        emit DisputeResolved( gigId,disputeAttestationUID,"In favor of Freelancer", payout);
     } else {
         // Client wins
         isCompleted = true;
         payout = fundsDeposited;
         payable(client).transfer(fundsDeposited);
-        emit DisputeResolved(disputeAttestationUID, "In favor of Client", payout, block.timestamp);
+        emit DisputeResolved(gigId,disputeAttestationUID, "In favor of Client", payout);
     }
 
     isDisputed = false;
