@@ -1,6 +1,7 @@
 import Home from "@/components/pages/Homepage";
 import Image from "next/image";
 import Link from "next/link";
+import { Briefcase, Users, FileCheck, Scale } from "lucide-react";
 
 export default function Homepage() {
   return (
@@ -76,6 +77,54 @@ export default function Homepage() {
           />
         </div>
       </main>
+
+      <section id="how-it-works" className="bg-[#FFE1A1] py-16">
+        <div className="container mx-auto px-4">
+          <h2 className="text-4xl font-black text-center mb-12 text-[#1E3A8A]">
+            How It Works
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              {
+                icon: Briefcase,
+                title: "1. Post the Job",
+                description:
+                  "Clients list their job requirements on the platform",
+              },
+              {
+                icon: Users,
+                title: "2. Connect with Freelancers",
+                description: "Sign an agreement via Attestation",
+              },
+              {
+                icon: FileCheck,
+                title: "3. Work Submission",
+                description:
+                  "WorkSubmitted Attestation is made. AI evaluates the demo and scores based on relevance.",
+              },
+              {
+                icon: Scale,
+                title: "4. Dispute Resolution",
+                description:
+                  "Validators analyze and review. AI score and validators' score resolve disputes.",
+              },
+            ].map((step, index) => (
+              <div
+                key={index}
+                className="bg-[#FDF7F0] p-6 rounded-xl border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A]"
+              >
+                <div className="w-16 h-16 rounded-full bg-[#FF5C00] flex items-center justify-center mb-4">
+                  <step.icon size={32} className="text-white" />
+                </div>
+                <h3 className="text-xl font-bold mb-2 text-[#1E3A8A]">
+                  {step.title}
+                </h3>
+                <p className="text-[#1E3A8A]">{step.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
