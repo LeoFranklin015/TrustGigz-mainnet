@@ -1,17 +1,21 @@
-import { GigCreated as GigCreatedEvent } from "../generated/GigFactory/GigFactory"
-import { GigCreated } from "../generated/schema"
+import { GigCreated } from "../generated/GigFactory/GigFactory";
+import { Gig } from "../generated/schema";
+import { GigContract as GigTemplate } from "../generated/templates";
 
-export function handleGigCreated(event: GigCreatedEvent): void {
-  let entity = new GigCreated(
-    event.transaction.hash.concatI32(event.logIndex.toI32())
-  )
-  entity.GigContract = event.params.GigContract
-  entity.client = event.params.client
-  entity.timestamp = event.params.timestamp
+export function handleGigCreated(event: GigCreated): void {
+  let gig = new Gig(event.params.gigId.toString());
+  gig.contractAddress = event.params.GigContract;
+  gig.client = event.params.client;
+  gig.description = event.params.description;
+  gig.budget = event.params.budget;
+  gig.deadline = event.params.deadline;
+  gig.isAccepted = false;
+  gig.isCompleted = false;
+  gig.isDisputed = false;
+  gig.createdAt = event.block.timestamp;
+  gig.updatedAt = event.block.timestamp;
+  gig.save();
 
-  entity.blockNumber = event.block.number
-  entity.blockTimestamp = event.block.timestamp
-  entity.transactionHash = event.transaction.hash
-
-  entity.save()
+  // Dynamically track this GigContract
+  GigTemplate.create(event.params.GigContract);
 }

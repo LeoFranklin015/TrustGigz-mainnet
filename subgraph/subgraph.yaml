@@ -8,9 +8,9 @@ dataSources:
     name: GigFactory
     network: optimism-sepolia
     source:
-      address: "0x660Ae50DD8241a174beD3b4300246af29C36a1d9"
+      address: "0xe779738E801Bfd80B33Ce41c0c2b651EBe6A7109"
       abi: GigFactory
-      startBlock: 20972545
+      startBlock: 20974913
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -21,6 +21,36 @@ dataSources:
         - name: GigFactory
           file: ./abis/GigFactory.json
       eventHandlers:
-        - event: GigCreated(indexed address,indexed address,uint256)
+        - event: GigCreated(uint256,indexed address,indexed address,string,uint256,uint256)
           handler: handleGigCreated
       file: ./src/gig-factory.ts
+templates:
+  - kind: ethereum
+    name: GigContract
+    network: optimism-sepolia
+    source:
+      abi: GigContract
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - Gig
+        - Applicant
+      abis:
+        - name: GigContract
+          file: ./abis/GigContract.json
+      eventHandlers:
+        - event: GigApplied(indexed uint256,indexed address,string)
+          handler: handleGigApplied
+        - event: GigAccepted(indexed uint256,indexed address,string)
+          handler: handleGigAccepted
+        - event: WorkSubmitted(indexed uint256,indexed bytes32,uint256,string)
+          handler: handleWorkSubmitted
+        - event: DisputeRaised(indexed uint256,indexed address,string,string)
+          handler: handleDisputeRaised
+        - event: DisputeResolved(indexed uint256,indexed string,string,uint256)
+          handler: handleDisputeResolved
+        - event: PaymentReleased(indexed uint256,indexed address,uint256)
+          handler: handlePaymentReleased
+      file: ./src/gig-contract.ts
