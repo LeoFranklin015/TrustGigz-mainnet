@@ -1,6 +1,8 @@
 import express, { json } from "express";
 import { connect } from "mongoose";
 import { config } from "dotenv";
+import cors from "cors";
+import clientRoutes from "./routes/client.routes.js";
 
 // Load environment variables from .env file
 config();
@@ -8,7 +10,21 @@ config();
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Middleware to parse JSON
+// CORS configuration
+const corsOptions = {
+  origin: [
+    "http://localhost:3000", // Next.js default dev server
+    "https://trustgigz.vercel.app", // Production domain (replace with actual domain)
+    "*", // Be cautious with this in production
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+  optionsSuccessStatus: 200,
+};
+
+// Middleware
+app.use(cors(corsOptions));
 app.use(json());
 
 // MongoDB connection
@@ -23,6 +39,9 @@ connect(process.env.MONGO_URI || "mongodb://localhost:27017/express-mongo-js", {
 app.get("/", (req, res) => {
   res.send("Hello, Express with JavaScript and MongoDB!");
 });
+
+// Client routes
+app.use("/api/client", clientRoutes);
 
 // Start server
 app.listen(port, () => {

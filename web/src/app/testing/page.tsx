@@ -13,6 +13,7 @@ import { useAccount } from "wagmi";
 import { bscTestnet } from "viem/chains";
 import { useEffect } from "react";
 import { sign } from "crypto";
+import axios from "axios";
 export default function page() {
   const BASContractAddress = "0x6c2270298b1e6046898a322acB3Cbad6F99f7CBD"; //bnb testnet
   const bas = new BAS(BASContractAddress);
@@ -133,7 +134,19 @@ export default function page() {
 
     const newAttestationUID = await tx.wait();
 
+    const dataStoredinDb = await axios.post(
+      "http://localhost:4000/api/client",
+      {
+        uid: newAttestationUID,
+        clientName: "Leo",
+        clientAddress: "0x4b4b30e2E7c6463b03CdFFD6c42329D357205334",
+        clientBio: "test bio",
+        category: ["test", "test2"],
+      }
+    );
+
     console.log("New attestation UID:", newAttestationUID);
+    console.log(dataStoredinDb);
   };
 
   return (
