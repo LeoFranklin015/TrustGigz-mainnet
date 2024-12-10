@@ -73,7 +73,19 @@ export default function page() {
 
     const newAttestationUID = await tx.wait();
 
+    const dataAddedToDb = await axios.post(
+      "http://localhost:4000/api/freelancer",
+      {
+        uid: newAttestationUID,
+        freelancerName: "Leo",
+        freelancerAddress: "0x4b4b30e2E7c6463b03CdFFD6c42329D357205334",
+        freelancerBio: "test bio",
+        skills: ["test", "test2"],
+      }
+    );
+
     console.log("New attestation UID:", newAttestationUID);
+    console.log(dataAddedToDb);
   };
 
   const decodeData = () => {

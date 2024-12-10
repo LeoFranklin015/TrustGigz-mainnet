@@ -3,6 +3,7 @@ import { connect } from "mongoose";
 import { config } from "dotenv";
 import cors from "cors";
 import clientRoutes from "./routes/client.routes.js";
+import freelancerRoutes from "./routes/freelancer.routes.js";
 
 // Load environment variables from .env file
 config();
@@ -13,14 +14,14 @@ const port = process.env.PORT || 5000;
 // CORS configuration
 const corsOptions = {
   origin: [
-    "http://localhost:3000", // Next.js default dev server
-    "https://trustgigz.vercel.app", // Production domain (replace with actual domain)
-    "*", // Be cautious with this in production
+    'http://localhost:3000',  // Next.js default dev server
+    'https://trustgigz.vercel.app',  // Production domain (replace with actual domain)
+    '*'  // Be cautious with this in production
   ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
-  optionsSuccessStatus: 200,
+  optionsSuccessStatus: 200
 };
 
 // Middleware
@@ -40,8 +41,9 @@ app.get("/", (req, res) => {
   res.send("Hello, Express with JavaScript and MongoDB!");
 });
 
-// Client routes
+// Routes
 app.use("/api/client", clientRoutes);
+app.use("/api/freelancer", freelancerRoutes);
 
 // Start server
 app.listen(port, () => {
