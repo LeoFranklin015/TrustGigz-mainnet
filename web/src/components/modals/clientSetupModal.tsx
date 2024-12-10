@@ -8,7 +8,7 @@ interface ProfileSetupModalProps {
   onClose: () => void;
 }
 
-const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({
+const ClientProfileSetupModal: React.FC<ProfileSetupModalProps> = ({
   isOpen,
   onClose,
 }) => {
@@ -123,4 +123,4 @@ const ProfileSetupModal: React.FC<ProfileSetupModalProps> = ({
   );
 };
 
-export default ProfileSetupModal;
+export default ClientProfileSetupModal;

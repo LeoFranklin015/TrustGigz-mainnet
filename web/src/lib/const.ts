@@ -1,5 +1,11 @@
+export const clientSchemaUID =
+  "0x671de200dd06a41bc1637ae3b3ee5f8e914e3b3a9559e2feddb6a869ef64417c";
+
+export const freelancerSchemaUID =
+  "0x429ad524f39cc3fcd95c367f0f6d86ea2e5a1966c3facd7903538bb9f2f94888";
+
 export const clientSchema =
-  "0xf979e582d98991d1e84c1d17ba77d5bc00c32abcffeb677fbec1a460041ce39e";
+  "string clientName,address clientAddress,string clientBio,string[] category,uint256 reputationScore,uint256 noOfJobsPosted,uint256 noOfDisputesRaised,uint256 noOfDisputesWon";
 
 export const freelancerSchema =
-  "0xa04f897fe7ee7715bacd5f2c4fc8f867a81e68b2eaa48cf196ab1e4ae5718704";
+  "string freelancerName,address freelancerAddress,string freelancerBio,string[] skills,uint256 reputationScore,uint256 noOfGigsCompleted,uint256 noOfDisputesArised,uint256 noOfDisputesWon";
