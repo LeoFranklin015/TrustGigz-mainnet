@@ -1,5 +1,6 @@
 import express from "express";
 import { Gig } from "../models/gig.model.js";
+import { Freelancer } from "../models/freelancer.model.js";
 
 const router = express.Router();
 
@@ -85,31 +86,138 @@ router.post("/", async (req, res) => {
   }
 });
 
+// route to add applicant
+
+router.post("/:uid", async (req, res) => {
+  try {
+    const { freelancerAddress, proposal } = req.body;
+    const gig = await Gig.findOne({
+      uid: req.params.uid.toLowerCase(),
+    });
+    if (!gig) {
+      return res.status(404).json({ message: "Client not found" });
+    }
+    gig.applicants.push({ freelancerAddress, proposal });
+    await gig.save();
+    res.json(gig);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error adding applicant",
+      error: error.message,
+    });
+  }
+});
+
+//Get Freelancer by address
+router.get("/:uid/applicants", async (req, res) => {
+  try {
+    // fetch only applicants
+    const uid = req.params.uid.toLowerCase();
+
+    // Perform aggregation to fetch applicants with freelancer details
+    const gig = await Gig.aggregate([
+      {
+        $match: { uid: uid },
+      },
+      {
+        $lookup: {
+          from: "freelancers", // Name of the freelancers collection
+          localField: "applicants.freelancerAddress", // Field in the gigs collection
+          foreignField: "freelancerAddress", // Field in the freelancers collection
+          as: "freelancerDetails", // Alias for the joined data
+        },
+      },
+      {
+        $addFields: {
+          applicants: {
+            $map: {
+              input: "$applicants",
+              as: "applicant",
+              in: {
+                $mergeObjects: [
+                  "$$applicant",
+                  {
+                    freelancerDetails: {
+                      $arrayElemAt: [
+                        {
+                          $filter: {
+                            input: "$freelancerDetails",
+                            as: "freelancer",
+                            cond: {
+                              $eq: [
+                                "$$freelancer.freelancerAddress",
+                                "$$applicant.freelancerAddress",
+                              ],
+                            },
+                          },
+                        },
+                        0,
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          uid: 1,
+          gigName: 1,
+          gigContractAddress: 1,
+          gigDescription: 1,
+          tags: 1,
+          budget: 1,
+          deadline: 1,
+          clientAddress: 1,
+          clientUID: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          __v: 1,
+          isAccepted: 1,
+          isCompleted: 1,
+          freelancerAddress: 1,
+          applicants: 1,
+        },
+      },
+    ]);
+
+    res.json(gig);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error fetching applicants",
+      error: error.message,
+    });
+  }
+});
+
 // Update client
-// router.put("/:address", async (req, res) => {
-//   try {
-//     const updatedClient = await Client.findOneAndUpdate(
-//       { clientAddress: req.params.address.toLowerCase() },
-//       req.body,
-//       {
-//         // Return the updated document instead of the original
-//         new: true,
-//         // Run the validators on the updated document
-//         runValidators: true,
-//       }
-//     );
+router.put("/:uid", async (req, res) => {
+  try {
+    const updatedGig = await Gig.findOneAndUpdate(
+      { uid: req.params.uid.toLowerCase() },
+      req.body,
+      {
+        // Return the updated document instead of the original
+        new: true,
+        // Run the validators on the updated document
+        runValidators: true,
+      }
+    );
 
-//     if (!updatedClient) {
-//       return res.status(404).json({ message: "Client not found" });
-//     }
+    if (!updatedGig) {
+      return res.status(404).json({ message: "Client not found" });
+    }
 
-//     res.json(updatedClient);
-//   } catch (error) {
-//     res.status(500).json({
-//       message: "Error updating client",
-//       error: error.message,
-//     });
-//   }
-// });
+    res.json(updatedGig);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error updating Gig",
+      error: error.message,
+    });
+  }
+});
 
 export default router;

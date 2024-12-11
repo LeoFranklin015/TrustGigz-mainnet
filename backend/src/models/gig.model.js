@@ -93,6 +93,9 @@ const gigSchema = new mongoose.Schema(
     decision: {
       type: String,
     },
+    IsCompleted: {
+      type: Boolean,
+    },
   },
   {
     timestamps: true,
