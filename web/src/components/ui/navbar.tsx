@@ -6,7 +6,7 @@ import React from "react";
 
 const Navbar = () => {
   return (
-    <nav className="border-b border-black bg-[#FDF7F0] p-4 w-full mx-auto">
+    <nav className="border-b border-black bg-[#FDF7F0] p-2 w-full mx-auto">
       <div className="w-full  mx-auto flex items-center justify-between px-8">
         <div className="flex items-center space-x-2">
           <div className="text-3xl font-black text-black">TrustGigz</div>

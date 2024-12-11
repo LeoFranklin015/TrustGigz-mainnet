@@ -3,6 +3,18 @@ import { Gig } from "../models/gig.model.js";
 
 const router = express.Router();
 
+router.get("/", async (req, res) => {
+  try {
+    const gigs = await Gig.find();
+    res.json(gigs);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error fetching gigs",
+      error: error.message,
+    });
+  }
+});
+
 // Get client by address
 router.get("/:uid", async (req, res) => {
   try {

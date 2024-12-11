@@ -6,6 +6,7 @@ import Navbar from "@/components/ui/navbar";
 import { useAccount } from "wagmi";
 import { checkFreelancerRegistered } from "@/lib/BASHelpers/checkFreelancerRegistered";
 import FreelancerProfileSetupModal from "@/components/modals/freeLancerSetupModal";
+import axios from "axios";
 
 const GigCard: React.FC<{ gig: any }> = ({ gig }) => {
   return (
@@ -37,7 +38,7 @@ const GigCard: React.FC<{ gig: any }> = ({ gig }) => {
           {gig.isAccepted ? "Accepted" : "Open"}
         </span>
         <Link
-          href={`/gigs/${gig._id}`}
+          href={`/gigs/${gig.uid}`}
           className="px-4 py-2 bg-[#FF5C00] rounded-full font-bold text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all"
         >
           View Details
@@ -50,43 +51,21 @@ const GigCard: React.FC<{ gig: any }> = ({ gig }) => {
 export default function GigsPage() {
   const { address } = useAccount();
   // This is mock data based on the structure you provided
-  const gigs: any[] = [
-    {
-      _id: "67593c69c774f0038e78bd49",
-      uid: "0x2159c333892577d929ae964c458e86e4a8cf7fe9cfc3fa0788abdba5bc0ad044",
-      gigName: "Website Revamp",
-      gigContractAddress: "0x760723b3a430797bae881e5bafe2f97ab38f0ebc",
-      gigDescription: "This is to update the Website",
-      tags: ["web design", "frontend"],
-      budget: 1000,
-      deadline: 12689691865,
-      clientAddress: "0x4b4b30e2e7c6463b03cdffd6c42329d357205334",
-      clientUID:
-        "0xbd91a7bbd682b18534eee56177d92e648b7a2d64c8ee9be7156015552fbdad3f",
-      createdAt: "2024-12-11T07:16:57.196+00:00",
-      updatedAt: "2024-12-11T07:16:57.196+00:00",
-      isAccepted: false,
-      isCompleted: false,
-    },
-    // Add more mock gigs here to demonstrate multiple cards
-    {
-      _id: "67593c69c774f0038e78bd50",
-      uid: "0x3159c333892577d929ae964c458e86e4a8cf7fe9cfc3fa0788abdba5bc0ad045",
-      gigName: "Mobile App Development",
-      gigContractAddress: "0x860723b3a430797bae881e5bafe2f97ab38f0ebd",
-      gigDescription: "Develop a new mobile app for iOS and Android",
-      tags: ["mobile", "app development"],
-      budget: 5000,
-      deadline: 12789691865,
-      clientAddress: "0x5b4b30e2e7c6463b03cdffd6c42329d357205335",
-      clientUID:
-        "0xcd91a7bbd682b18534eee56177d92e648b7a2d64c8ee9be7156015552fbdad4g",
-      createdAt: "2024-12-12T07:16:57.196+00:00",
-      updatedAt: "2024-12-12T07:16:57.196+00:00",
-      isAccepted: true,
-      isCompleted: false,
-    },
-  ];
+  const [gigs, setGigs] = useState<any[]>([]);
+  useEffect(() => {
+    const fetchGigs = async () => {
+      try {
+        const data = await axios.get(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gig`
+        );
+        console.log(data.data);
+        setGigs(data.data);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchGigs();
+  }, []);
 
   const [isOpen, setIsOpen] = useState(true);
   const [registeredFreelancer, setRegisteredFreelancer] = useState(false);
@@ -121,6 +100,7 @@ export default function GigsPage() {
         <h1 className="text-4xl font-black text-[#1E3A8A] mb-8 text-center mt-4">
           Available Gigs
         </h1>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {gigs.map((gig) => (
             <GigCard key={gig._id} gig={gig} />

@@ -30,9 +30,12 @@ export default function Homepage() {
               >
                 Post a Gig
               </Link>
-              <button className="w-full sm:w-auto px-8 py-3 bg-[#FFE1A1] rounded-full font-bold text-black border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all">
+              <Link
+                href="/gigs"
+                className="w-full sm:w-auto px-8 py-3 bg-[#FFE1A1] rounded-full font-bold text-black border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all"
+              >
                 Find a Gig
-              </button>
+              </Link>
             </div>
           </div>
         </div>

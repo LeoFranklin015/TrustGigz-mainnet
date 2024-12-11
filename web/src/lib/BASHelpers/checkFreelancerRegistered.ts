@@ -1,9 +1,9 @@
 import axios from "axios";
 
-export const checkClientRegistered = async (clientAddress: string) => {
+export const checkFreelancerRegistered = async (freelancerAddress: string) => {
   try {
     const data = await axios.get(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/client/${clientAddress}`
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/freelancer/${freelancerAddress}`
     );
     console.log(data.data);
     if (data.data) {
