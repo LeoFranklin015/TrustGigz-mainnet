@@ -6,6 +6,12 @@ import { useAccount } from "wagmi";
 import { checkClientRegistered } from "@/lib/BASHelpers/checkClientRegistered";
 import Navbar from "@/components/ui/navbar";
 import ClientProfileSetupModal from "@/components/modals/clientSetupModal";
+import { publicClient, useEthersSigner, walletClient } from "@/lib/viemClient";
+import { gigFactoryAddress, gigSchema, gigSchemaUID } from "@/lib/const";
+import { GigFactoryContractABI } from "@/lib/abis/GigFactory";
+import { decodeEventLog, parseEther } from "viem";
+import { BAS, SchemaEncoder } from "@bnb-attestation-service/bas-sdk";
+import { bscTestnet } from "viem/chains";
 
 export default function PostJob() {
   const [title, setTitle] = useState("");
@@ -13,9 +19,13 @@ export default function PostJob() {
   const [tag, setTag] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [budget, setBudget] = useState("");
-  const [duration, setDuration] = useState("");
+  const [deadline, setDeadline] = useState("");
   const [registerdClient, setRegisteredClient] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
+
+  const BASContractAddress = "0x6c2270298b1e6046898a322acB3Cbad6F99f7CBD"; //bnb testnet
+  const bas = new BAS(BASContractAddress);
+  const signer = useEthersSigner({ chainId: bscTestnet.id });
 
   const handleAddTag = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && tag.trim()) {
@@ -46,6 +56,73 @@ export default function PostJob() {
       setIsOpen(false);
     }
   }, [registerdClient]);
+
+  const createGig = async () => {
+    // Create a gig in the contract.
+    try {
+      const txhash = await walletClient.writeContract({
+        account: address!,
+        address: gigFactoryAddress,
+        abi: GigFactoryContractABI,
+        functionName: "createGig",
+        args: [
+          JSON.stringify({ title, description, tags }),
+          BigInt(budget),
+          BigInt(deadline),
+        ],
+        value: BigInt(budget),
+      });
+
+      console.log(txhash);
+
+      const reciept = await publicClient.waitForTransactionReceipt({
+        hash: txhash,
+      });
+      console.log(reciept.logs);
+
+      const eventLogs = decodeEventLog({
+        abi: GigFactoryContractABI,
+        data: reciept.logs[0].data,
+        topics: reciept.logs[0].topics,
+      });
+      console.log(eventLogs);
+
+      const gigContarctAddress = (eventLogs.args as any).GigContract;
+
+      // Create the GIG in the BAS attestation service.
+
+      const schemeEncoder = new SchemaEncoder(gigSchema);
+      const encodedData = schemeEncoder.encodeData([
+        { name: "gigTitle", value: title, type: "string" },
+        { name: "gigDescription", value: description, type: "string" },
+        { name: "gigTags", value: tags, type: "string[]" },
+        { name: "gigBudget", value: BigInt(budget), type: "uint256" },
+        { name: "gigDeadliine", value: BigInt(deadline), type: "uint256" },
+        { name: "gigClient", value: address!, type: "address" },
+        {
+          name: "gigContractAddress",
+          value: gigContarctAddress,
+          type: "address",
+        },
+      ]);
+      const schemaUID = gigSchemaUID;
+      bas.connect(signer!);
+      const tx = await bas.attest({
+        schema: schemaUID,
+        data: {
+          recipient: gigContarctAddress,
+          expirationTime: BigInt(0),
+          revocable: true, // Be aware that if your schema is not revocable, this MUST be false
+          data: encodedData,
+        },
+      });
+
+      const gigAttestationUID = await tx.wait();
+      console.log(gigAttestationUID);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#FDF7F0] py-12 px-4">
@@ -144,23 +221,27 @@ export default function PostJob() {
           </div>
           <div>
             <label
-              htmlFor="duration"
+              htmlFor="Deadline"
               className="block text-lg font-medium text-[#1E3A8A] mb-2"
             >
-              Duration
+              Deadline
             </label>
             <input
               type="text"
-              id="duration"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
+              id="Deadline"
+              value={deadline}
+              onChange={(e) => setDeadline(e.target.value)}
               className="w-full px-4 py-2 rounded-full border-2 border-[#1E3A8A] focus:outline-none focus:ring-2 focus:ring-[#FF5C00] bg-white text-[#1E3A8A]"
-              placeholder="Enter project duration"
+              placeholder="Enter project Deadline"
             />
           </div>
           <button
             type="submit"
             className="w-full px-6 py-3 bg-[#FF5C00] rounded-full font-bold text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all"
+            onClick={async (e) => {
+              e.preventDefault();
+              await createGig();
+            }}
           >
             Post Gig
           </button>

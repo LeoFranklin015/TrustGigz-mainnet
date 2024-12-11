@@ -1,8 +1,18 @@
-import { createWalletClient, custom } from "viem";
+import { createPublicClient, createWalletClient, custom } from "viem";
 import { bscTestnet } from "viem/chains";
 import { ethers } from "ethers";
 import { useMemo } from "react";
 import { useWalletClient } from "wagmi";
+
+export const walletClient = createWalletClient({
+  chain: bscTestnet,
+  transport: custom(window.ethereum),
+});
+
+export const publicClient = createPublicClient({
+  chain: bscTestnet,
+  transport: custom(window.ethereum),
+});
 
 const getClient = () => {
   if (typeof window !== "undefined" && window.ethereum) {
