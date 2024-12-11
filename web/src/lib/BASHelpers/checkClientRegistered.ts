@@ -1,21 +1,20 @@
 import axios from "axios";
-import { clientSchemaUID } from "../const";
-import { getAttestationDataFromUID } from "./getAttestationDataFromUID";
 
 export const checkClientRegistered = async (clientAddress: string) => {
-  const firstPage = 1;
-  const pageSize = 10;
-  const attestations = await axios.get(
-    `/api/bas?schemaUid=${clientSchemaUID}&page=${firstPage}&pageSize=${pageSize}`
-  );
-  console.log(attestations.data.attestations);
-  const fetchedAttestations = attestations.data.attestations;
-  fetchedAttestations.forEach((attestation: any) => {
-    if (clientAddress == attestation.owner) {
+  try {
+    const data = await axios.get(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/client/${clientAddress}a`
+    );
+    console.log(data.data);
+    if (data.data) {
       return true;
+    } else {
+      return false;
     }
-  });
-  return false;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return false;
+    }
+    throw error;
+  }
 };
-
-checkClientRegistered("0x4b4b30e2E7c6463b03CdFFD6c42329D357205334");

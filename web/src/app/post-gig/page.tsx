@@ -30,11 +30,32 @@ export default function PostJob() {
   };
 
   const { address } = useAccount();
+  useEffect(() => {
+    const checkAlreadyRegistered = async () => {
+      const check = await checkClientRegistered(address!);
+      setRegisteredClient(check);
+      console.log(check);
+    };
+    if (address) {
+      checkAlreadyRegistered();
+    }
+  }, [address]);
+
+  useEffect(() => {
+    if (registerdClient) {
+      setIsOpen(false);
+    }
+  }, [registerdClient]);
 
   return (
     <div className="min-h-screen bg-[#FDF7F0] py-12 px-4">
       <Navbar />
-
+      {address && !registerdClient && (
+        <ClientProfileSetupModal
+          isOpen={isOpen}
+          onClose={() => setIsOpen(false)}
+        />
+      )}
       <div className="container mx-auto max-w-2xl">
         <h1 className="text-4xl font-black text-[#1E3A8A] mb-8 text-center mt-4">
           Post a New Gig

@@ -14,14 +14,14 @@ const port = process.env.PORT || 5000;
 // CORS configuration
 const corsOptions = {
   origin: [
-    'http://localhost:3000',  // Next.js default dev server
-    'https://trustgigz.vercel.app',  // Production domain (replace with actual domain)
-    '*'  // Be cautious with this in production
+    "http://localhost:3000", // Next.js default dev server
+    "https://trustgigz.vercel.app", // Production domain (replace with actual domain)
+    "*", // Be cautious with this in production
   ],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
 };
 
 // Middleware
@@ -29,10 +29,7 @@ app.use(cors(corsOptions));
 app.use(json());
 
 // MongoDB connection
-connect(process.env.MONGO_URI || "mongodb://localhost:27017/express-mongo-js", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
+connect(process.env.MONGO_URI || "mongodb://localhost:27017/express-mongo-js")
   .then(() => console.log("Connected to MongoDB"))
   .catch((err) => console.log("MongoDB connection error:", err));
 

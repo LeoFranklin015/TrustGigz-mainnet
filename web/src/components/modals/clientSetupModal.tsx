@@ -2,6 +2,12 @@
 
 import React, { useState, KeyboardEvent } from "react";
 import { X } from "lucide-react";
+import axios from "axios";
+import { BAS, SchemaEncoder } from "@bnb-attestation-service/bas-sdk";
+import { useEthersSigner } from "@/lib/viemClient";
+import { bscTestnet } from "viem/chains";
+import { useAccount } from "wagmi";
+import { clientSchemaUID } from "@/lib/const";
 
 interface ProfileSetupModalProps {
   isOpen: boolean;
@@ -16,6 +22,10 @@ const ClientProfileSetupModal: React.FC<ProfileSetupModalProps> = ({
   const [bio, setBio] = useState("");
   const [category, setCategory] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
+  const BASContractAddress = "0x6c2270298b1e6046898a322acB3Cbad6F99f7CBD"; //bnb testnet
+  const bas = new BAS(BASContractAddress);
+  const signer = useEthersSigner({ chainId: bscTestnet.id });
+  const { address } = useAccount();
 
   const handleAddCategory = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && category.trim()) {
@@ -30,6 +40,58 @@ const ClientProfileSetupModal: React.FC<ProfileSetupModalProps> = ({
   };
 
   if (!isOpen) return null;
+
+  const createClient = async () => {
+    const schemaEncoder = new SchemaEncoder(
+      "string clientName,address clientAddress,string clientBio,string[] category,uint256 reputationScore,uint256 noOfJobsPosted,uint256 noOfDisputesRaised,uint256 noOfDisputesWon"
+    );
+
+    const encodedData = schemaEncoder.encodeData([
+      { name: "clientName", value: name, type: "string" },
+      {
+        name: "clientAddress",
+        value: address!,
+        type: "address",
+      },
+      { name: "clientBio", value: bio, type: "string" },
+      { name: "category", value: categories, type: "string[]" },
+      { name: "reputationScore", value: BigInt(0), type: "uint256" }, // 1, type: "uint256" },
+      { name: "noOfJobsPosted", value: BigInt(0), type: "uint256" },
+      { name: "noOfDisputesRaised", value: BigInt(0), type: "uint256" },
+      { name: "noOfDisputesWon", value: BigInt(0), type: "uint256" },
+    ]);
+    const schemaUID = clientSchemaUID;
+    bas.connect(signer!);
+    const tx = await bas.attest({
+      schema: schemaUID,
+      data: {
+        recipient: address!,
+        expirationTime: BigInt(0),
+        revocable: true, // Be aware that if your schema is not revocable, this MUST be false
+        data: encodedData,
+      },
+    });
+
+    const newAttestationUID = await tx.wait();
+    try {
+      const dataStoredinDb = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/client`,
+        {
+          uid: newAttestationUID,
+          clientName: name,
+          clientAddress: address!,
+          clientBio: bio,
+          category: categories,
+        }
+      );
+
+      console.log(dataStoredinDb);
+    } catch (error) {
+      console.log(error);
+    }
+
+    // onClose();
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -112,8 +174,12 @@ const ClientProfileSetupModal: React.FC<ProfileSetupModalProps> = ({
             </div>
           </div>
           <button
-            type="submit"
             className="px-6 py-2 bg-[#FF5C00] rounded-full font-bold text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all"
+            onClick={async (e) => {
+              e.preventDefault();
+              await createClient();
+              onClose();
+            }}
           >
             Save Profile
           </button>
