@@ -12,6 +12,7 @@ import { GigFactoryContractABI } from "@/lib/abis/GigFactory";
 import { decodeEventLog, parseEther } from "viem";
 import { BAS, SchemaEncoder } from "@bnb-attestation-service/bas-sdk";
 import { bscTestnet } from "viem/chains";
+import axios from "axios";
 
 export default function PostJob() {
   const [title, setTitle] = useState("");
@@ -119,6 +120,24 @@ export default function PostJob() {
 
       const gigAttestationUID = await tx.wait();
       console.log(gigAttestationUID);
+
+      // Store the Attestion in Backend to index.
+      const dbData = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gig`,
+        {
+          gigName: title,
+          gigDescription: description,
+          tags: tags,
+          budget: budget,
+          deadline: deadline,
+          clientAddress: address!,
+          gigContractAddress: gigContarctAddress,
+          uid: gigAttestationUID,
+          clientUID:
+            "0xbd91a7bbd682b18534eee56177d92e648b7a2d64c8ee9be7156015552fbdad3f",
+        }
+      );
+      console.log(dbData);
     } catch (error) {
       console.log(error);
     }

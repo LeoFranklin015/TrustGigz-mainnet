@@ -4,6 +4,7 @@ import { config } from "dotenv";
 import cors from "cors";
 import clientRoutes from "./routes/client.routes.js";
 import freelancerRoutes from "./routes/freelancer.routes.js";
+import gigRoutes from "./routes/gig.routes.js";
 
 // Load environment variables from .env file
 config();
@@ -41,6 +42,7 @@ app.get("/", (req, res) => {
 // Routes
 app.use("/api/client", clientRoutes);
 app.use("/api/freelancer", freelancerRoutes);
+app.use("/api/gig", gigRoutes);
 
 // Start server
 app.listen(port, () => {
