@@ -52,6 +52,17 @@ const gigSchema = new mongoose.Schema(
       type: String,
       lowercase: true,
     },
+    applicants: [
+      {
+        freelancerAddress: {
+          type: String,
+          lowercase: true,
+        },
+        proposal: {
+          type: String,
+        },
+      },
+    ],
     isAccepted: {
       type: Boolean,
     },

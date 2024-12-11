@@ -5,7 +5,7 @@ import Link from "next/link";
 import Navbar from "@/components/ui/navbar";
 import { useAccount } from "wagmi";
 import { checkFreelancerRegistered } from "@/lib/BASHelpers/checkFreelancerRegistered";
-import FreelancerProfileSetupModal from "@/components/modals/freeLancerSetupModal";
+import FreelancerProfileSetupModal from "@/components/modals/freelancerSetupModal";
 import axios from "axios";
 
 const GigCard: React.FC<{ gig: any }> = ({ gig }) => {
