@@ -16,6 +16,14 @@ import { RotatingSlider } from "@/components/ui/RotatingSlider";
 import axios from "axios";
 import TransgateConnect from "@zkpass/transgate-js-sdk";
 import { verifyEVMMessageSignature } from "@/lib/verifyZKPass";
+import { BAS, SchemaEncoder } from "@bnb-attestation-service/bas-sdk";
+import { useEthersSigner } from "@/lib/viemClient";
+import { bscTestnet } from "viem/chains";
+import {
+  disputeAttestationSchema,
+  disputeAttestationSchemaUID,
+} from "@/lib/const";
+import { useAccount } from "wagmi";
 
 // Mock gig data (replace with actual data fetching in a real application)
 // Mock dispute data
@@ -38,11 +46,65 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
   const [clientFavor, setClientFavor] = useState(50);
   const [decision, setDecision] = useState("");
   const [gig, setGig] = useState<any>(null);
-  const [verified, setVerified] = useState<Boolean | null>(null);
+  const [validator, setValidator] = useState<any>(null);
+  const [verified, setVerified] = useState<Boolean | null>(true);
+  const [disputes, setDisputes] = useState<any>(null);
+  const BASContractAddress = "0x6c2270298b1e6046898a322acB3Cbad6F99f7CBD"; //bnb testnet
+  const bas = new BAS(BASContractAddress);
+  const signer = useEthersSigner({ chainId: bscTestnet.id });
+  const { address } = useAccount();
 
-  const handleSubmitDecision = () => {
+  const handleSubmitDecision = async (e: React.FormEvent) => {
+    e.preventDefault();
     console.log("Decision submitted:", { clientFavor, decision });
-    // Here you would typically send this data to your backend
+    const schemaEncoder = new SchemaEncoder(disputeAttestationSchema);
+    ("bytes32 refUID,bytes32 validatorUID,address validatorAddress,uint256 clientFavor,string validationDescripton");
+
+    const encodedData = schemaEncoder.encodeData([
+      { name: "refUID", value: gig.uid, type: "bytes32" },
+      {
+        name: "validatorUID",
+        value: validator.uid,
+        type: "bytes32",
+      },
+      { name: "validatorAddress", value: address, type: "address" },
+      { name: "clientFavor", value: clientFavor, type: "uint256" },
+      { name: "validationDescripton", value: decision, type: "string" },
+    ]);
+
+    const schemaUID = disputeAttestationSchemaUID;
+    bas.connect(signer!);
+    const tx = await bas.attest({
+      schema: schemaUID,
+      data: {
+        recipient: gig.gigContractAddress,
+        expirationTime: BigInt(0),
+        revocable: true,
+        data: encodedData,
+      },
+    });
+
+    const attestationUID = await tx.wait();
+    console.log(attestationUID);
+
+    // Store this data to index this.
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/dispute`,
+        {
+          uid: attestationUID,
+          refUID: gig.disputeAttestationUID,
+          validatorAddress: address,
+          validatorUID: validator.uid,
+          clientFavor: clientFavor,
+          validationDescription: decision,
+        }
+      );
+
+      console.log(response.data);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   useEffect(() => {
@@ -61,24 +123,46 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
     fetchGig();
   }, [params.uid]);
 
+  useEffect(() => {
+    const fetchDisputes = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/dispute/${gig.disputeAttestationUID}`
+        );
+        console.log(response.data);
+        setDisputes(response.data);
+      } catch (error) {
+        console.error("Error fetching disputes:", error);
+      }
+    };
+    if (gig) {
+      fetchDisputes();
+    }
+  }, [gig]);
+
+  useEffect(() => {
+    const fetchvalidator = async () => {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/freelancer/${address}`
+      );
+      console.log(response.data);
+      setValidator(response.data);
+    };
+    if (address) {
+      fetchvalidator();
+    }
+  }, [address]);
+
   const verify = async () => {
     try {
-      // The appid of the project created in dev center
       const appid = "5c791946-486c-4939-b8fa-ed022dfd4c4a";
 
-      // Create the connector instance
       const connector = new TransgateConnect(appid);
 
-      // Check if the TransGate extension is installed
-      // If it returns false, please prompt to install it from chrome web store
       const isAvailable = await connector.isTransgateAvailable();
 
       if (isAvailable) {
-        // The schema id of the project
         const schemaId = "9f5dd9b3f5e84a86b2515c70b4dc650a";
-
-        // Launch the process of verification
-        // This method can be invoked in a loop when dealing with multiple schemas
         const res: any = await connector.launch(schemaId);
 
         console.log(res);
@@ -223,7 +307,7 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
                 disabled={
                   verified === null ? true : verified === true ? false : true
                 }
-                onClick={verify}
+                onClick={handleSubmitDecision}
                 className="w-full bg-[#FF5C00] text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all hover:bg-[#1E3A8A]"
               >
                 Submit Decision
@@ -240,22 +324,26 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 p-6">
-            {mockDisputes.map((dispute, index) => (
-              <div
-                key={index}
-                className="bg-[#FDF7F0] p-4 rounded-lg border-2 border-[#1E3A8A]"
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-[#1E3A8A] font-bold">
-                    Client Favor:
-                  </span>
-                  <span className="text-[#FF5C00] font-bold">
-                    {dispute.percentage}%
-                  </span>
+            {disputes &&
+              disputes.map((dispute: any, index: number) => (
+                <div
+                  key={index}
+                  className="bg-[#FDF7F0] p-4 rounded-lg border-2 border-[#1E3A8A]"
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-[#1E3A8A] font-bold">
+                      {dispute.validatorAddress.slice(0, 6)}...
+                      {dispute.validatorAddress.slice(-4)}
+                    </span>
+                    <span className="text-[#FF5C00] font-bold">
+                      {dispute.clientFavor}%
+                    </span>
+                  </div>
+                  <p className="text-[#1E3A8A]">
+                    {dispute.validationDescription}
+                  </p>
                 </div>
-                <p className="text-[#1E3A8A]">{dispute.description}</p>
-              </div>
-            ))}
+              ))}
           </CardContent>
         </Card>
       </div>

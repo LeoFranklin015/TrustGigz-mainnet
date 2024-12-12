@@ -5,6 +5,7 @@ import cors from "cors";
 import clientRoutes from "./routes/client.routes.js";
 import freelancerRoutes from "./routes/freelancer.routes.js";
 import gigRoutes from "./routes/gig.routes.js";
+import disputeRoutes from "./routes/dispute.routes.js";
 
 // Load environment variables from .env file
 config();
@@ -43,6 +44,7 @@ app.get("/", (req, res) => {
 app.use("/api/client", clientRoutes);
 app.use("/api/freelancer", freelancerRoutes);
 app.use("/api/gig", gigRoutes);
+app.use("/api/dispute", disputeRoutes);
 
 // Start server
 app.listen(port, () => {
