@@ -21,6 +21,7 @@ import { GigContractABI } from "@/lib/abis/GigContract";
 import { BAS, SchemaEncoder } from "@bnb-attestation-service/bas-sdk";
 import { gigAgreement, gigAgreementUID } from "@/lib/const";
 import { bscTestnet } from "viem/chains";
+import Submission from "@/components/pages/Submission";
 
 const GigPage = ({ params }: { params: { uid: string } }) => {
   const [proposal, setProposal] = useState("");
@@ -267,6 +268,16 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
             </CardContent>
           </Card>
         )}
+        <div>
+          <Submission
+            description={
+              "Apply for gig feature , with a textbox and submit proposal button.The button should be in green color."
+            }
+            gigContarctAddress={gig.gigContractAddress}
+            gigUID={gig.uid}
+            freelancerUID={gig.freelancerUID}
+          />
+        </div>
       </div>
     </div>
   );

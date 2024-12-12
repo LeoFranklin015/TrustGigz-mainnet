@@ -180,6 +180,7 @@ router.get("/:uid/applicants", async (req, res) => {
           isCompleted: 1,
           freelancerAddress: 1,
           applicants: 1,
+          freelancerUID: 1,
         },
       },
     ]);

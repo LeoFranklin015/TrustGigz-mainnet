@@ -176,11 +176,7 @@ import Submission from "@/components/pages/Submission";
 import React from "react";
 
 const page = () => {
-  return (
-    <div>
-      <Submission />
-    </div>
-  );
+  return <div>{/* <Submission /> */}</div>;
 };
 
 export default page;

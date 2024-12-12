@@ -10,6 +10,9 @@ export const gigSchemaUID =
 export const gigAgreementUID =
   "0x09e3e1dc8c19670ccf128c657bfcb707d792921852df48ce837af27e5666322c";
 
+export const aiAttestationSchemaUID =
+  "0x784be583b872cdf051ae174d034cd499d3e5f17b35d6640e6cd052068c6b17d2";
+
 export const clientSchema =
   "string clientName,address clientAddress,string clientBio,string[] category,uint256 reputationScore,uint256 noOfJobsPosted,uint256 noOfDisputesRaised,uint256 noOfDisputesWon";
 
@@ -21,5 +24,8 @@ export const gigSchema =
 
 export const gigAgreement =
   "string gigTitle,bytes32 refUID,string gigDescription,uint256 gigDeadline,uint256 gigBudget,bytes32 gigClientUID,bytes32 gigApplicantUID,address gigContractAddress";
+
+export const aiAttestationSchema =
+  "bytes32 refUID,uint256 aiScore,string aiFeedback,bytes32 freelancerUID,string videoIpfsHash";
 
 export const gigFactoryAddress = "0xC13D441ED0E004aa019cdeE5795b79a571bCBE9F";

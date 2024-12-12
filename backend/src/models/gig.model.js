@@ -77,6 +77,12 @@ const gigSchema = new mongoose.Schema(
     AIScore: {
       type: Number,
     },
+    videoIpfsHash: {
+      type: String,
+    },
+    AIFeedback: {
+      type: String,
+    },
     isDisputeRaised: {
       type: Boolean,
     },
@@ -94,6 +100,9 @@ const gigSchema = new mongoose.Schema(
       type: String,
     },
     IsCompleted: {
+      type: Boolean,
+    },
+    IsSubmitted: {
       type: Boolean,
     },
   },
