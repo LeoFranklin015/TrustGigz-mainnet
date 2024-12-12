@@ -26,7 +26,12 @@ import axios from "axios";
 import { publicClient, useEthersSigner, walletClient } from "@/lib/viemClient";
 import { GigContractABI } from "@/lib/abis/GigContract";
 import { BAS, SchemaEncoder } from "@bnb-attestation-service/bas-sdk";
-import { gigAgreement, gigAgreementUID } from "@/lib/const";
+import {
+  gigAgreement,
+  gigAgreementUID,
+  gigDisputeSchema,
+  gigDisputeSchemaUID,
+} from "@/lib/const";
 import { bscTestnet } from "viem/chains";
 import Submission from "@/components/pages/Submission";
 import { VideoPlayer } from "@/components/ui/videoPlayer";
@@ -37,6 +42,7 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
   const [proposal, setProposal] = useState("");
   const [isClient, setIsClient] = useState(false);
   const [gig, setGig] = useState<any>(null);
+  const [disputeDescription, setDisputeDescription] = useState("");
   const { address } = useAccount();
   const BASContractAddress = "0x6c2270298b1e6046898a322acB3Cbad6F99f7CBD"; //bnb testnet
   const bas = new BAS(BASContractAddress);
@@ -174,13 +180,56 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
     }
   };
 
-  const fetchVideo = async () => {
-    console.log(gig.videoIpfsHash);
-    const file = await pinata.gateways.get(gig.videoIpfsHash);
-    const url = URL.createObjectURL(file.contentType as any);
+  const handleRaiseDispute = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const schemeEncoder = new SchemaEncoder(gigDisputeSchema);
+    const encodedData = schemeEncoder.encodeData([
+      { name: "refUID", value: gig.uid, type: "bytes32" },
+      { name: "disputeDescription", value: disputeDescription, type: "string" },
+      { name: "clientUID", value: gig.clientUID, type: "bytes32" },
+      { name: "freelancerUID", value: gig.freelancerUID, type: "bytes32" },
+    ]);
+    const schemaUID = gigDisputeSchemaUID;
+    bas.connect(signer!);
+    const tx = await bas.attest({
+      schema: schemaUID,
+      data: {
+        recipient: gig.gigContractAddress,
+        expirationTime: BigInt(0),
+        revocable: true, // Be aware that if your schema is not revocable, this MUST be false
+        data: encodedData,
+      },
+    });
+    const disputeUID = await tx.wait();
+    console.log(disputeUID);
 
-    console.log(url);
-    return url;
+    // Write the dispute in the contract
+
+    const txhash = await walletClient.writeContract({
+      account: address!,
+      address: gig.gigContractAddress,
+      abi: GigContractABI,
+      functionName: "raiseDispute",
+      args: [disputeUID, disputeDescription],
+    });
+
+    const reciept = await publicClient.waitForTransactionReceipt({
+      hash: txhash,
+    });
+    console.log(reciept.logs);
+
+    // Store the states in indexer
+
+    const response = await axios.put(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gig/${gig.uid}`,
+      {
+        isDisputeRaised: true,
+        disputeAttestationUID: disputeUID,
+        disputeDescription: disputeDescription,
+        isDisputed: false,
+      }
+    );
+    console.log(response.data);
   };
 
   if (!gig) {
@@ -336,8 +385,26 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <VideoPlayer videoUrl={videoUrl} />{" "}
-              {/* Pass the video URL directly */}
+              <div className="mb-4 flex flex-col gap-2 ">
+                <VideoPlayer videoUrl={videoUrl} />{" "}
+                <Textarea
+                  placeholder="Write your conflict here..."
+                  value={disputeDescription}
+                  onChange={(e) => setDisputeDescription(e.target.value)}
+                  className="mb-4 border-2 border-[#1E3A8A] focus:ring-[#FF5C00] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all text-[#1E3A8A]"
+                />
+                <div className="flex justify-end gap-2">
+                  <Button className="px-6 py-2 bg-[#FF5C00] rounded-full font-bold text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all hover:[&:not(:disabled)]:bg-[#1E3A8A]">
+                    Accept
+                  </Button>
+                  <Button
+                    onClick={handleRaiseDispute}
+                    className="px-6 py-2 bg-[#FF5C00] rounded-full font-bold text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all hover:[&:not(:disabled)]:bg-[#1E3A8A]"
+                  >
+                    Raise Dispute
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
