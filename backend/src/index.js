@@ -2,6 +2,7 @@ import express, { json } from "express";
 import { connect } from "mongoose";
 import { config } from "dotenv";
 import cors from "cors";
+import morgan from "morgan";
 import clientRoutes from "./routes/client.routes.js";
 import freelancerRoutes from "./routes/freelancer.routes.js";
 import gigRoutes from "./routes/gig.routes.js";
@@ -29,6 +30,7 @@ const corsOptions = {
 // Middleware
 app.use(cors(corsOptions));
 app.use(json());
+app.use(morgan("dev"));
 
 // MongoDB connection
 connect(process.env.MONGO_URI || "mongodb://localhost:27017/express-mongo-js")
