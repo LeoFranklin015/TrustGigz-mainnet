@@ -7,12 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import OpenAI from "openai";
-import Navbar from "@/components/ui/navbar";
 import { BAS, SchemaEncoder } from "@bnb-attestation-service/bas-sdk";
 import { publicClient, useEthersSigner, walletClient } from "@/lib/viemClient";
 import { bscTestnet } from "viem/chains";
 import { aiAttestationSchema, aiAttestationSchemaUID } from "@/lib/const";
-import { privateKeyToAccount } from "viem/accounts";
 import { GigContractABI } from "@/lib/abis/GigContract";
 import { PinataSDK } from "pinata-web3";
 import axios from "axios";
@@ -203,12 +201,11 @@ export default function SubmissionPage({
       const jsonSummary = JSON.parse(cleanedSummary);
       setScore(jsonSummary.score);
       setFeedback(jsonSummary.feedback);
-
-      // await createAttestation({
-      //   hash,
-      //   score: jsonSummary.score,
-      //   feedback: jsonSummary.feedback,
-      // });
+      await createAttestation({
+        hash,
+        score: jsonSummary.score,
+        feedback: jsonSummary.feedback,
+      });
     } catch (err) {
       setError("Failed to analyze video. Please try again.");
       console.error(err);
