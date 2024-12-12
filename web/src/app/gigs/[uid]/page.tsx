@@ -1,7 +1,14 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Briefcase, Calendar, DollarSign, Tag, Users } from "lucide-react";
+import {
+  Briefcase,
+  Calendar,
+  DollarSign,
+  Tag,
+  Users,
+  Video,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -22,6 +29,9 @@ import { BAS, SchemaEncoder } from "@bnb-attestation-service/bas-sdk";
 import { gigAgreement, gigAgreementUID } from "@/lib/const";
 import { bscTestnet } from "viem/chains";
 import Submission from "@/components/pages/Submission";
+import { VideoPlayer } from "@/components/ui/videoPlayer";
+import Evalaute from "@/components/pages/Evalaute";
+import { PinataSDK } from "pinata-web3";
 
 const GigPage = ({ params }: { params: { uid: string } }) => {
   const [proposal, setProposal] = useState("");
@@ -31,6 +41,11 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
   const BASContractAddress = "0x6c2270298b1e6046898a322acB3Cbad6F99f7CBD"; //bnb testnet
   const bas = new BAS(BASContractAddress);
   const signer = useEthersSigner({ chainId: bscTestnet.id });
+
+  const pinata = new PinataSDK({
+    pinataJwt: process.env.PINATA_JWT!,
+    pinataGateway: "orange-select-opossum-767.mypinata.cloud",
+  });
 
   useEffect(() => {
     const fetchGig = async () => {
@@ -53,6 +68,29 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
       setIsClient(address.toLowerCase() === gig.clientAddress.toLowerCase());
     }
   }, [address, gig]);
+
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchVideo = async () => {
+      try {
+        if (gig && gig.videoIpfsHash) {
+          console.log(gig.videoIpfsHash);
+          const file = await pinata.gateways.get(gig.videoIpfsHash);
+          console.log(file.data);
+          const url = URL.createObjectURL(file.data as any);
+          setVideoUrl(url); // Step 2: Set the video URL state
+          console.log(url);
+        }
+      } catch (error) {
+        console.error("Error fetching video:", error);
+      }
+    };
+
+    if (gig && gig.videoIpfsHash) {
+      fetchVideo(); // Trigger video fetch when gig and videoHash are available
+    }
+  }, [gig]); // Dependency on gig to re-fetch when gig data changes
 
   const handleApplicationProposal = async () => {
     try {
@@ -136,6 +174,15 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
     }
   };
 
+  const fetchVideo = async () => {
+    console.log(gig.videoIpfsHash);
+    const file = await pinata.gateways.get(gig.videoIpfsHash);
+    const url = URL.createObjectURL(file.contentType as any);
+
+    console.log(url);
+    return url;
+  };
+
   if (!gig) {
     return (
       <div className="min-h-screen bg-[#FDF7F0] py-12 px-4">
@@ -200,7 +247,6 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
             </div>
           </CardContent>
         </Card>
-
         {isClient && gig.isAccepted && (
           <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A]">
             <CardHeader>
@@ -226,7 +272,6 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
             </CardContent>
           </Card>
         )}
-
         {isClient && (
           <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A]">
             <CardHeader>
@@ -268,16 +313,34 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
             </CardContent>
           </Card>
         )}
-        <div>
-          <Submission
-            description={
-              "Apply for gig feature , with a textbox and submit proposal button.The button should be in green color."
-            }
-            gigContarctAddress={gig.gigContractAddress}
-            gigUID={gig.uid}
-            freelancerUID={gig.freelancerUID}
-          />
-        </div>
+        {gig.freelancerAddress === address &&
+          gig.isAccepted &&
+          !gig.IsSubmitted && (
+            <div>
+              <Submission
+                description={
+                  "Apply for gig feature , with a textbox and submit proposal button.The button should be in green color."
+                }
+                gigContarctAddress={gig.gigContractAddress}
+                gigUID={gig.uid}
+                freelancerUID={gig.freelancerUID}
+              />
+            </div>
+          )}
+        // Evaluate
+        {videoUrl && (
+          <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A]">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold text-[#1E3A8A]">
+                Evaluate Work
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <VideoPlayer videoUrl={videoUrl} />{" "}
+              {/* Pass the video URL directly */}
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
