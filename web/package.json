@@ -24,6 +24,7 @@
     "lucide-react": "^0.350.0",
     "next": "14.1.3",
     "next-themes": "^0.2.1",
+    "openai": "^4.76.1",
     "pino-pretty": "^10.3.1",
     "react": "^18",
     "react-dom": "^18",
