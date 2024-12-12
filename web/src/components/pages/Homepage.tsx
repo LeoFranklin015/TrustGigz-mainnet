@@ -96,7 +96,7 @@ export default function Homepage() {
           </div>
         </div>
       </section>
-      // Built Using
+
       <section className="bg-[#FDF7F0] py-16">
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-black text-center mb-12 text-[#1E3A8A]">

@@ -35,7 +35,6 @@ import {
 import { bscTestnet } from "viem/chains";
 import Submission from "@/components/pages/Submission";
 import { VideoPlayer } from "@/components/ui/videoPlayer";
-import Evalaute from "@/components/pages/Evalaute";
 import { PinataSDK } from "pinata-web3";
 
 const GigPage = ({ params }: { params: { uid: string } }) => {
@@ -362,21 +361,21 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
             </CardContent>
           </Card>
         )}
-        {gig.freelancerAddress === address &&
+        {/* {gig.freelancerAddress === address &&
           gig.isAccepted &&
-          !gig.IsSubmitted && (
-            <div>
-              <Submission
-                description={
-                  "Apply for gig feature , with a textbox and submit proposal button.The button should be in green color."
-                }
-                gigContarctAddress={gig.gigContractAddress}
-                gigUID={gig.uid}
-                freelancerUID={gig.freelancerUID}
-              />
-            </div>
-          )}
-        // Evaluate
+          !gig.IsSubmitted && ( */}
+        <div>
+          <Submission
+            description={
+              "Apply for gig feature , with a textbox and submit proposal button.The button should be in green color."
+            }
+            gigContarctAddress={gig.gigContractAddress}
+            gigUID={gig.uid}
+            freelancerUID={gig.freelancerUID}
+          />
+        </div>
+        {/* )} */}
+
         {videoUrl && (
           <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A]">
             <CardHeader>

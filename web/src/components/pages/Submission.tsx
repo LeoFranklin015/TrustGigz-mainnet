@@ -131,7 +131,36 @@ export default function SubmissionPage({
               Strictly follow the above format.Also dont need to add any additional text.Also dont add json with backslash to the response.
                 `,
               },
-              ...base64Frames,
+              {
+                type: "image_url",
+                image_url: {
+                  url: frames[0],
+                },
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: frames[1],
+                },
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: frames[2],
+                },
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: frames[3],
+                },
+              },
+              {
+                type: "image_url",
+                image_url: {
+                  url: frames[4],
+                },
+              },
             ],
           },
         ],
@@ -175,11 +204,11 @@ export default function SubmissionPage({
       setScore(jsonSummary.score);
       setFeedback(jsonSummary.feedback);
 
-      await createAttestation({
-        hash,
-        score: jsonSummary.score,
-        feedback: jsonSummary.feedback,
-      });
+      // await createAttestation({
+      //   hash,
+      //   score: jsonSummary.score,
+      //   feedback: jsonSummary.feedback,
+      // });
     } catch (err) {
       setError("Failed to analyze video. Please try again.");
       console.error(err);
