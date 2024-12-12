@@ -17,37 +17,22 @@ import axios from "axios";
 import TransgateConnect from "@zkpass/transgate-js-sdk";
 import { verifyEVMMessageSignature } from "@/lib/verifyZKPass";
 import { BAS, SchemaEncoder } from "@bnb-attestation-service/bas-sdk";
-import { useEthersSigner } from "@/lib/viemClient";
+import { publicClient, useEthersSigner, walletClient } from "@/lib/viemClient";
 import { bscTestnet } from "viem/chains";
 import {
   disputeAttestationSchema,
   disputeAttestationSchemaUID,
 } from "@/lib/const";
 import { useAccount } from "wagmi";
-
-// Mock gig data (replace with actual data fetching in a real application)
-// Mock dispute data
-const mockDisputes = [
-  {
-    percentage: 60,
-    description: "The color scheme doesn't match the requirements.",
-  },
-  {
-    percentage: 80,
-    description: "Some features are missing from the final product.",
-  },
-  {
-    percentage: 30,
-    description: "The layout is not responsive on mobile devices.",
-  },
-];
+import { GigContractABI } from "@/lib/abis/GigContract";
+import { decodeEventLog } from "viem";
 
 const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
   const [clientFavor, setClientFavor] = useState(50);
   const [decision, setDecision] = useState("");
   const [gig, setGig] = useState<any>(null);
   const [validator, setValidator] = useState<any>(null);
-  const [verified, setVerified] = useState<Boolean | null>(true);
+  const [verified, setVerified] = useState<Boolean | null>(null);
   const [disputes, setDisputes] = useState<any>(null);
   const BASContractAddress = "0x6c2270298b1e6046898a322acB3Cbad6F99f7CBD"; //bnb testnet
   const bas = new BAS(BASContractAddress);
@@ -152,6 +137,71 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
       fetchvalidator();
     }
   }, [address]);
+
+  const calculateTotalPercentage = () => {
+    let totalFreelancerVotePercentage = 0;
+    disputes.forEach((dispute: any) => {
+      totalFreelancerVotePercentage += dispute.clientFavor;
+    });
+
+    totalFreelancerVotePercentage /= disputes.length;
+
+    let totalClientVotePercentage = 100 - totalFreelancerVotePercentage;
+    totalFreelancerVotePercentage = Math.floor(totalFreelancerVotePercentage);
+    totalClientVotePercentage = Math.floor(totalClientVotePercentage);
+    return { totalFreelancerVotePercentage, totalClientVotePercentage };
+  };
+
+  const handleResolveDispute = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const { totalFreelancerVotePercentage, totalClientVotePercentage } =
+        calculateTotalPercentage();
+
+      const txhash = await walletClient.writeContract({
+        account: address!,
+        address: gig.gigContractAddress,
+        abi: GigContractABI,
+        functionName: "resolveDispute",
+        args: [totalClientVotePercentage, totalFreelancerVotePercentage],
+      });
+      await publicClient.waitForTransactionReceipt({
+        hash: txhash,
+      });
+      console.log(txhash);
+
+      const reciept = await publicClient.waitForTransactionReceipt({
+        hash: txhash,
+      });
+      console.log(reciept.logs);
+
+      const eventLogs = decodeEventLog({
+        abi: GigContractABI,
+        data: reciept.logs[0].data,
+        topics: reciept.logs[0].topics,
+      });
+      console.log(eventLogs);
+
+      const decision = (eventLogs.args as any).decision;
+
+      console.log(decision);
+
+      // Store this data to indexer
+
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gig/${gig.uid}`,
+        {
+          isDisputed: true,
+          decision: decision,
+          isCompleted: true,
+        }
+      );
+
+      console.log(response.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const verify = async () => {
     try {
@@ -319,8 +369,14 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
         {/* Mock Disputes */}
         <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A] overflow-hidden">
           <CardHeader className="bg-[#FFE1A1] border-b-2 border-[#1E3A8A]">
-            <CardTitle className="text-2xl font-bold text-[#1E3A8A]">
-              Recent Disputes
+            <CardTitle className="text-2xl font-bold text-[#1E3A8A] flex justify-between items-center">
+              <div>Recent Validations</div>
+              <Button
+                onClick={handleResolveDispute}
+                className="bg-[#FF5C00] text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all hover:bg-[#1E3A8A]"
+              >
+                Resolve
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 p-6">
