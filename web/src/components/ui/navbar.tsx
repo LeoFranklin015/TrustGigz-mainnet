@@ -2,20 +2,19 @@
 
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from "next/link";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useMemo } from "react";
 import { createWeb3Name } from "@web3-name-sdk/core";
 
 const Navbar = () => {
-  const web3name = createWeb3Name();
+  const web3name = useMemo(() => createWeb3Name(), []);
   const [web3Name, setWeb3Name] = useState("");
-  const fetchedForAccount = useRef({ account: "", chainId: 97 });
 
-  const fetchWeb3Name = async (account: any, chain: any) => {
-    if (account && chain) {
+  const handleFetchWeb3Name = async (account: any) => {
+    if (account?.address) {
       try {
         const webName = await web3name.getDomainName({
           address: account.address,
-          queryChainIdList: [1, chain.id],
+          queryChainIdList: [1],
         });
         console.log("Fetched Web3 Name:", webName);
         if (webName) {
@@ -72,19 +71,10 @@ const Navbar = () => {
                 (!authenticationStatus ||
                   authenticationStatus === "authenticated");
 
-              useEffect(() => {
-                if (
-                  connected &&
-                  (fetchedForAccount.current.account !== account.address ||
-                    fetchedForAccount.current.chainId !== chain.id)
-                ) {
-                  fetchWeb3Name(account, chain);
-                  fetchedForAccount.current = {
-                    account: account.address,
-                    chainId: chain.id,
-                  };
-                }
-              }, [connected, account, chain]);
+              // Trigger Web3 name fetch when account is connected
+              if (connected && account) {
+                handleFetchWeb3Name(account);
+              }
 
               return (
                 <div
@@ -149,7 +139,7 @@ const Navbar = () => {
                         type="button"
                         className="px-6 py-2 bg-[#FF5C00] rounded-full font-bold text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all"
                       >
-                        {web3Name ? web3Name : account.displayName}
+                        {web3Name || account.displayName}
                         {account.displayBalance
                           ? ` (${account.displayBalance})`
                           : ""}
