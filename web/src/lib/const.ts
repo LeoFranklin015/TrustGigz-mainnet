@@ -41,3 +41,4 @@ export const disputeAttestationSchema =
   "bytes32 refUID,bytes32 validatorUID,address validatorAddress,uint256 clientFavor,string validationDescripton";
 
 export const gigFactoryAddress = "0xC13D441ED0E004aa019cdeE5795b79a571bCBE9F";
+// 0xd62378a75cfed3644d39bce139a40d3b27027fb1; - redeployed contract

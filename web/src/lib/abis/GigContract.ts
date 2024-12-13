@@ -1,4 +1,4 @@
-export const GigContractABI = [
+[
   {
     inputs: [
       {
@@ -177,10 +177,10 @@ export const GigContractABI = [
         type: "uint256",
       },
       {
-        indexed: true,
-        internalType: "bytes32",
-        name: "workHash",
-        type: "bytes32",
+        indexed: false,
+        internalType: "string",
+        name: "demoVideoCID",
+        type: "string",
       },
       {
         indexed: false,
@@ -227,9 +227,9 @@ export const GigContractABI = [
   {
     inputs: [
       {
-        internalType: "uint256",
+        internalType: "address",
         name: "",
-        type: "uint256",
+        type: "address",
       },
     ],
     name: "applicants",
@@ -290,9 +290,9 @@ export const GigContractABI = [
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "applicantIndex",
-        type: "uint256",
+        internalType: "address",
+        name: "applicantAddress",
+        type: "address",
       },
       {
         internalType: "string",
@@ -326,6 +326,19 @@ export const GigContractABI = [
         internalType: "uint256",
         name: "",
         type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "demoVideoCID",
+    outputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
       },
     ],
     stateMutability: "view",
@@ -411,31 +424,6 @@ export const GigContractABI = [
   },
   {
     inputs: [],
-    name: "getApplicants",
-    outputs: [
-      {
-        components: [
-          {
-            internalType: "address",
-            name: "freelancerAddress",
-            type: "address",
-          },
-          {
-            internalType: "string",
-            name: "proposal",
-            type: "string",
-          },
-        ],
-        internalType: "struct GigContract.Applicant[]",
-        name: "",
-        type: "tuple[]",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
     name: "gigId",
     outputs: [
       {
@@ -506,6 +494,13 @@ export const GigContractABI = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "pay",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "string",
@@ -544,9 +539,9 @@ export const GigContractABI = [
   {
     inputs: [
       {
-        internalType: "bytes32",
-        name: "workHash",
-        type: "bytes32",
+        internalType: "string",
+        name: "_demoVideoCID",
+        type: "string",
       },
       {
         internalType: "uint256",
