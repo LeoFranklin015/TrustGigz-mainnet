@@ -16,3 +16,16 @@ export const FetchWeb3Name = async (web3name: any, address: any) => {
     }
   }
 };
+
+export const resolveAddressToName = async (web3name: any, address: string) => {
+  try {
+    const webName = await web3name.getDomainName({
+      address,
+      queryChainIdList: [1], // Adjust chain ID as needed
+    });
+    return webName || address.slice(0, 6) + "..." + address.slice(-4);
+  } catch (error) {
+    console.error("Error resolving name:", error);
+    return address.slice(0, 6) + "..." + address.slice(-4);
+  }
+};

@@ -6,6 +6,7 @@ import {
   Calendar,
   DollarSign,
   Tag,
+  User,
   Users,
   Video,
 } from "lucide-react";
@@ -37,6 +38,8 @@ import Submission from "@/components/pages/Submission";
 import { VideoPlayer } from "@/components/ui/videoPlayer";
 import { PinataSDK } from "pinata-web3";
 import Link from "next/link";
+import { createWeb3Name } from "@web3-name-sdk/core";
+import { resolveAddressToName } from "@/lib/spaceID/fetchWeb3Name";
 
 const GigPage = ({ params }: { params: { uid: string } }) => {
   const [proposal, setProposal] = useState("");
@@ -47,6 +50,10 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
   const BASContractAddress = "0x6c2270298b1e6046898a322acB3Cbad6F99f7CBD"; //bnb testnet
   const bas = new BAS(BASContractAddress);
   const signer = useEthersSigner({ chainId: bscTestnet.id });
+  const [resolvedClientAddress, setResolvedClientAddress] = useState("");
+  const [resolvedFreelancerAddress, setResolvedFreelancerAddress] =
+    useState("");
+  const web3name = createWeb3Name();
 
   const pinata = new PinataSDK({
     pinataJwt: process.env.PINATA_JWT!,
@@ -62,6 +69,33 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
         console.log(response.data[0]);
         setGig(response.data[0]);
         setIsClient(response.data[0].clientAddress == address?.toLowerCase());
+        const clientResolvedname = await resolveAddressToName(
+          web3name,
+          // response.data[0].clientAddress
+          "0xe6FC3609233197e54f9A0b1C051534bec6ECf79b"
+        );
+        setResolvedClientAddress(
+          clientResolvedname
+            ? clientResolvedname
+            : response.data[0].clientAddress.slice(0, 4) +
+                "..." +
+                response.data[0].clientAddress.slice(-4)
+        );
+
+        if (response.data[0].isAccepted) {
+          const freelancerResolvedname = await resolveAddressToName(
+            web3name,
+            response.data[0].freelancerAddress
+          );
+
+          setResolvedFreelancerAddress(
+            freelancerResolvedname
+              ? freelancerResolvedname
+              : response.data[0].freelancerAddress.slice(0, 4) +
+                  "..." +
+                  response.data[0].freelancerAddress.slice(-4)
+          );
+        }
       } catch (error) {
         console.error("Error fetching gig:", error);
       }
@@ -318,6 +352,20 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
                 Applicants: {gig.applicants.length}
               </span>
             </div>
+            <div className="flex items-center">
+              <User className="text-[#FF5C00] mr-2" />
+              <span className="text-[#1E3A8A] font-bold">
+                Client: {resolvedClientAddress}
+              </span>
+            </div>
+            {gig.isAccepted && (
+              <div className="flex items-center">
+                <User className="text-[#FF5C00] mr-2" />
+                <span className="text-[#1E3A8A] font-bold">
+                  Freelancer: {resolvedFreelancerAddress}
+                </span>
+              </div>
+            )}
           </CardContent>
         </Card>
         {!isClient && !gig.isAccepted && (
