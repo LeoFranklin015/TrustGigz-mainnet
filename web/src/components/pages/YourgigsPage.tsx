@@ -30,12 +30,9 @@ const checkFreelancerRegistered = async (freelancerAddress: string) => {
 
 export default function GigsPage() {
   const { address } = useAccount();
-  // This is mock data based on the structure you provided
-  const [gigs, setGigs] = useState<any[]>([]);
-  const [openGigs, setOpenGigs] = useState<any[]>([]);
-  const [yourGigs, setYourGigs] = useState<any[]>([]);
-  const [disputedGigs, setDisputedGigs] = useState<any[]>([]);
-  const [completedGigs, setCompletedGigs] = useState<any[]>([]);
+
+  const [postedGigs, setPostedGigs] = useState<any[]>([]);
+  const [acceptedGigs, setAcceptedGigs] = useState<any[]>([]);
   const [isBrowser, setIsBrowser] = useState(false);
   useEffect(() => {
     const fetchGigs = async () => {
@@ -46,36 +43,24 @@ export default function GigsPage() {
         console.log(data.data);
 
         // Filter gigs in one pass
-        const openGigs: any = [];
-        const yourGigs: any = [];
-        const disputedGigs: any = [];
-        const completedGigs: any = [];
+        const postedGigs: any = [];
+        const AcceptedGigs: any = [];
 
         data.data.forEach((gig: any) => {
-          if (gig.isAccepted == false) {
-            openGigs.push(gig);
+          if (gig.clientAddress == address?.toLowerCase()) {
+            postedGigs.push(gig);
           }
           if (
             gig.isAccepted == true &&
-            gig.freelancerAddress == address &&
-            gig.isCompleted == false &&
-            gig.isDisputed == false
+            gig.freelancerAddress == address?.toLowerCase()
           ) {
-            yourGigs.push(gig);
-          }
-          if (gig.isDisputed == true && gig.IsCompleted == false) {
-            disputedGigs.push(gig);
-          }
-          if (gig.IsCompleted) {
-            completedGigs.push(gig);
+            AcceptedGigs.push(gig);
           }
         });
 
         // Update states with the filtered arrays
-        setOpenGigs(openGigs);
-        setYourGigs(yourGigs);
-        setDisputedGigs(disputedGigs);
-        setCompletedGigs(completedGigs);
+        setPostedGigs(postedGigs);
+        setAcceptedGigs(AcceptedGigs);
       } catch (error) {
         console.log(error);
       }
@@ -130,64 +115,32 @@ export default function GigsPage() {
         <div className="container mx-auto flex flex-col gap-2">
           <div>
             <h1 className="text-4xl font-black text-[#1E3A8A] mb-8 text-center mt-4">
-              Your Gigs
+              Posted Gigs
             </h1>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {yourGigs.length == 0 && (
+              {postedGigs.length == 0 && (
                 <p className="text-2xl font-bold text-[#1E3A8A] mb-2 text-center mt-4">
-                  You have no gigs
+                  You have no posted gigs
                 </p>
               )}
-              {yourGigs.map((gig) => (
+              {postedGigs.map((gig) => (
                 <GigCard key={gig._id} gig={gig} />
               ))}
             </div>
           </div>
           <div>
             <h1 className="text-4xl font-black text-[#1E3A8A] mb-8 text-center mt-4">
-              Open Gigs
+              Accepted Gigs
             </h1>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {openGigs.length == 0 && (
+              {acceptedGigs.length == 0 && (
                 <p className="text-2xl font-bold text-[#1E3A8A] mb-2 text-center mt-4">
                   No open gigs
                 </p>
               )}
-              {openGigs.map((gig) => (
-                <GigCard key={gig._id} gig={gig} />
-              ))}
-            </div>
-          </div>
-          <div>
-            <h1 className="text-4xl font-black text-[#1E3A8A] mb-8 text-center mt-4">
-              Disputed
-            </h1>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {disputedGigs.length == 0 && (
-                <p className="text-2xl font-bold text-[#1E3A8A] mb-2 text-center mt-4">
-                  No disputed gigs
-                </p>
-              )}
-              {disputedGigs.map((gig) => (
-                <GigCard key={gig._id} gig={gig} />
-              ))}
-            </div>
-          </div>
-          <div>
-            <h1 className="text-4xl font-black text-[#1E3A8A] mb-8 text-center mt-4">
-              Completed
-            </h1>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {completedGigs.length == 0 && (
-                <p className="text-2xl font-bold text-[#1E3A8A] mb-2 text-center mt-4">
-                  No completed gigs
-                </p>
-              )}
-              {completedGigs.map((gig) => (
+              {acceptedGigs.map((gig) => (
                 <GigCard key={gig._id} gig={gig} />
               ))}
             </div>

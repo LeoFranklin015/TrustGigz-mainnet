@@ -30,7 +30,11 @@ export const GigCard: React.FC<{ gig: any }> = ({ gig }) => {
           {gig.isAccepted ? "Accepted" : "Open"}
         </span>
         <Link
-          href={`/gigs/${gig.uid}`}
+          href={`${
+            gig.isDisputed && !gig.IsCompleted
+              ? `/gigs/dispute/${gig.uid}`
+              : `/gigs/${gig.uid}`
+          }`}
           className="px-4 py-2 bg-[#FF5C00] rounded-full font-bold text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all"
         >
           View Details

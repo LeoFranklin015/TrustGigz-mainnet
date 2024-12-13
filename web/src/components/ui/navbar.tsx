@@ -13,10 +13,10 @@ const Navbar = () => {
         </div>
         <div className="hidden lg:flex items-center space-x-6 text-black">
           <Link
-            href="#"
+            href="/yourgigs"
             className="hover:text-[#FF5C00] transition-colors font-medium"
           >
-            How it works?
+            Posted Gigs
           </Link>
           <Link
             href="#"

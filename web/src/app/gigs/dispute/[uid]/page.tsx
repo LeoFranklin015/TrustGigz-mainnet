@@ -378,77 +378,90 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
         </Card>
 
         {/* Dispute Resolution Form */}
-        <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A] overflow-hidden">
-          <CardHeader className="bg-[#FFE1A1] border-b-2 border-[#1E3A8A]">
-            <CardTitle className="text-2xl font-bold text-[#1E3A8A]">
-              Resolve Dispute
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6 p-6">
-            <div className="flex w-full justify-between items-center gap-2">
-              <div className="flex flex-col items-center">
-                <h3 className="text-lg font-semibold text-[#1E3A8A] mb-4">
-                  Client Favor
-                </h3>
-                <RotatingSlider value={clientFavor} onChange={setClientFavor} />
-                <p className="mt-2 text-[#1E3A8A] font-bold">{clientFavor}%</p>
+
+        {!gig.isDisputed && (
+          <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A] overflow-hidden">
+            <CardHeader className="bg-[#FFE1A1] border-b-2 border-[#1E3A8A]">
+              <CardTitle className="text-2xl font-bold text-[#1E3A8A]">
+                Resolve Dispute
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              <div className="flex w-full justify-between items-center gap-2">
+                <div className="flex flex-col items-center">
+                  <h3 className="text-lg font-semibold text-[#1E3A8A] mb-4">
+                    Client Favor
+                  </h3>
+                  <RotatingSlider
+                    value={clientFavor}
+                    onChange={setClientFavor}
+                  />
+                  <p className="mt-2 text-[#1E3A8A] font-bold">
+                    {clientFavor}%
+                  </p>
+                </div>
+                <div className="flex flex-col items-center w-full">
+                  <Textarea
+                    placeholder="Enter your decision here..."
+                    value={decision}
+                    onChange={(e) => setDecision(e.target.value)}
+                    className="min-h-[150px] border-2 border-[#1E3A8A] focus:ring-[#FF5C00] text-black placeholder:text-black"
+                  />
+                </div>
               </div>
-              <div className="flex flex-col items-center w-full">
-                <Textarea
-                  placeholder="Enter your decision here..."
-                  value={decision}
-                  onChange={(e) => setDecision(e.target.value)}
-                  className="min-h-[150px] border-2 border-[#1E3A8A] focus:ring-[#FF5C00] text-black placeholder:text-black"
-                />
+              <div className="text-[#1E3A8A] text-sm">
+                The validator must need to verify that he has done freelancing
+                in Fiverr to showcase his expertise( for demo considering 0
+                works)
               </div>
-            </div>
-            <div className="text-[#1E3A8A] text-sm">
-              The validator must need to verify that he has done freelancing in
-              Fiverr to showcase his expertise( for demo considering 0 works)
-            </div>
-            <div className="flex items-center gap-4">
-              <Button
-                disabled={
-                  verified === null ? false : verified === true ? true : false
-                }
-                onClick={verify}
-                className={`w-full bg-[#FF5C00] text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all hover:bg-[#1E3A8A]${
-                  verified === true
-                    ? " opacity-50 cursor-not-allowed bg-green-500 "
-                    : verified === false
-                    ? " opacity-50 cursor-not-allowed bg-red-500"
-                    : ""
-                }`}
-              >
-                {verified === null
-                  ? "Verify"
-                  : verified === true
-                  ? "Verified ✅"
-                  : "Not Verified ❌"}
-              </Button>
-              <Button
-                disabled={
-                  verified === null ? true : verified === true ? false : true
-                }
-                onClick={handleSubmitDecision}
-                className="w-full bg-[#FF5C00] text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all hover:bg-[#1E3A8A]"
-              >
-                Submit Decision
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="flex items-center gap-4">
+                <Button
+                  disabled={
+                    verified === null ? false : verified === true ? true : false
+                  }
+                  onClick={verify}
+                  className={`w-full bg-[#FF5C00] text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all hover:bg-[#1E3A8A]${
+                    verified === true
+                      ? " opacity-50 cursor-not-allowed bg-green-500 "
+                      : verified === false
+                      ? " opacity-50 cursor-not-allowed bg-red-500"
+                      : ""
+                  }`}
+                >
+                  {verified === null
+                    ? "Verify"
+                    : verified === true
+                    ? "Verified ✅"
+                    : "Not Verified ❌"}
+                </Button>
+                <Button
+                  disabled={
+                    verified === null ? true : verified === true ? false : true
+                  }
+                  onClick={handleSubmitDecision}
+                  className="w-full bg-[#FF5C00] text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all hover:bg-[#1E3A8A]"
+                >
+                  Submit Decision
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A] overflow-hidden">
           <CardHeader className="bg-[#FFE1A1] border-b-2 border-[#1E3A8A]">
             <CardTitle className="text-2xl font-bold text-[#1E3A8A] flex justify-between items-center">
               <div>Recent Validations</div>
-              <Button
-                onClick={handleResolveDispute}
-                className="bg-[#FF5C00] text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all hover:bg-[#1E3A8A]"
-              >
-                Resolve
-              </Button>
+              {gig.isDisputed ? (
+                <div className="text-[#FF5C00] text-sm">{gig.decision}</div>
+              ) : (
+                <Button
+                  onClick={handleResolveDispute}
+                  className="bg-[#FF5C00] text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all hover:bg-[#1E3A8A]"
+                >
+                  Resolve
+                </Button>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 p-6">
