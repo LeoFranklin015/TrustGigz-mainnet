@@ -4,25 +4,16 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from "next/link";
 import React, { useState, useMemo } from "react";
 import { createWeb3Name } from "@web3-name-sdk/core";
+import { FetchWeb3Name } from "@/lib/spaceID/fetchWeb3Name";
 
 const Navbar = () => {
   const web3name = useMemo(() => createWeb3Name(), []);
   const [web3Name, setWeb3Name] = useState("");
 
-  const handleFetchWeb3Name = async (account: any) => {
-    if (account?.address) {
-      try {
-        const webName = await web3name.getDomainName({
-          address: account.address,
-          queryChainIdList: [1],
-        });
-        console.log("Fetched Web3 Name:", webName);
-        if (webName) {
-          setWeb3Name(webName);
-        }
-      } catch (error) {
-        console.error("Error fetching Web3 name:", error);
-      }
+  const handleFetchWeb3Name = async (web3name: any, account: any) => {
+    const webName = await FetchWeb3Name(web3name, account.address);
+    if (webName) {
+      setWeb3Name(webName);
     }
   };
 
@@ -73,7 +64,7 @@ const Navbar = () => {
 
               // Trigger Web3 name fetch when account is connected
               if (connected && account) {
-                handleFetchWeb3Name(account);
+                handleFetchWeb3Name(web3name, account);
               }
 
               return (
