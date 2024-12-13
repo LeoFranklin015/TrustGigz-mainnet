@@ -1,4 +1,4 @@
-[
+export const GigFactoryContractABI = [
   {
     inputs: [],
     stateMutability: "nonpayable",
