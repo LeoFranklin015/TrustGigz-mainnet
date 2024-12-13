@@ -11,24 +11,24 @@ const Navbar = () => {
         <div className="flex items-center space-x-2">
           <div className="text-3xl font-black text-black">TrustGigz</div>
         </div>
-        <div className="hidden lg:flex items-center space-x-6 text-black">
+        <div className="hidden lg:flex items-center space-x-6 text-black justify-between">
           <Link
             href="/yourgigs"
             className="hover:text-[#FF5C00] transition-colors font-medium"
           >
-            Posted Gigs
+            Your Gigs
           </Link>
           <Link
-            href="#"
+            href="/post-gig"
             className="hover:text-[#FF5C00] transition-colors font-medium"
           >
-            Become a freelancer
+            Post a Gig
           </Link>
           <Link
-            href="#"
+            href="/gigs"
             className="hover:text-[#FF5C00] transition-colors font-medium"
           >
-            Search for freelancers
+            Find a Gig
           </Link>
         </div>
         <div className="flex items-center space-x-4">

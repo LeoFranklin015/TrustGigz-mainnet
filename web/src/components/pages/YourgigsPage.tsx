@@ -1,32 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
 import Navbar from "@/components/ui/navbar";
 import { useAccount } from "wagmi";
-// import { checkFreelancerRegistered } from "@/lib/BASHelpers/checkFreelancerRegistered";
-import FreelancerProfileSetupModal from "@/components/modals/freelancerSetupModal";
+
 import axios from "axios";
 import { GigCard } from "@/components/ui/GigCard";
-
-const checkFreelancerRegistered = async (freelancerAddress: string) => {
-  try {
-    const data = await axios.get(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/freelancer/${freelancerAddress}`
-    );
-    console.log(data.data);
-    if (data.data) {
-      return true;
-    } else {
-      return false;
-    }
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 404) {
-      return false;
-    }
-    throw error;
-  }
-};
 
 export default function GigsPage() {
   const { address } = useAccount();
@@ -72,26 +51,6 @@ export default function GigsPage() {
   const [registeredFreelancer, setRegisteredFreelancer] = useState(false);
 
   useEffect(() => {
-    const checkAlreadyRegistered = async () => {
-      if (!address) {
-        return;
-      }
-      const check = await checkFreelancerRegistered(address!);
-      setRegisteredFreelancer(check);
-      console.log(check);
-    };
-    if (address) {
-      checkAlreadyRegistered();
-    }
-  }, [address]);
-
-  useEffect(() => {
-    if (registeredFreelancer) {
-      setIsOpen(false);
-    }
-  }, [registeredFreelancer]);
-
-  useEffect(() => {
     // Check if the code is running in the browser (client-side)
     if (typeof window !== "undefined") {
       setIsBrowser(true);
@@ -106,12 +65,6 @@ export default function GigsPage() {
     isBrowser && (
       <div className="min-h-screen bg-[#FDF7F0] py-12 px-4">
         <Navbar />
-        {address && !registeredFreelancer && (
-          <FreelancerProfileSetupModal
-            isOpen={isOpen}
-            onClose={() => setIsOpen(false)}
-          />
-        )}
         <div className="container mx-auto flex flex-col gap-2">
           <div>
             <h1 className="text-4xl font-black text-[#1E3A8A] mb-8 text-center mt-4">
