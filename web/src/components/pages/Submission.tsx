@@ -267,7 +267,7 @@ export default function SubmissionPage({
         address: gigContarctAddress,
         abi: GigContractABI,
         functionName: "submitWork",
-        args: [aiAttestationUID, score, aiAttestationUID],
+        args: [hash, score, aiAttestationUID],
       });
 
       await publicClient.waitForTransactionReceipt({

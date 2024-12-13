@@ -23,6 +23,7 @@ export default function PostJob() {
   const [deadline, setDeadline] = useState("");
   const [registerdClient, setRegisteredClient] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
+  const [client, setClient] = useState<any | null>(null);
 
   const BASContractAddress = "0x6c2270298b1e6046898a322acB3Cbad6F99f7CBD"; //bnb testnet
   const bas = new BAS(BASContractAddress);
@@ -44,13 +45,17 @@ export default function PostJob() {
   useEffect(() => {
     const checkAlreadyRegistered = async () => {
       const check = await checkClientRegistered(address!);
+      if (check !== false) {
+        setClient(check);
+        setRegisteredClient(true);
+      }
       setRegisteredClient(check);
       console.log(check);
     };
     if (address) {
       checkAlreadyRegistered();
     }
-  }, [address]);
+  }, [address, isOpen]);
 
   useEffect(() => {
     if (registerdClient) {
@@ -100,6 +105,7 @@ export default function PostJob() {
         { name: "gigBudget", value: BigInt(budget), type: "uint256" },
         { name: "gigDeadliine", value: BigInt(deadline), type: "uint256" },
         { name: "gigClient", value: address!, type: "address" },
+        { name: "gigClientUID", value: client!.uid, type: "bytes32" },
         {
           name: "gigContractAddress",
           value: gigContarctAddress,

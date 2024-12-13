@@ -7,7 +7,7 @@ export const checkClientRegistered = async (clientAddress: string) => {
     );
     console.log(data.data);
     if (data.data) {
-      return true;
+      return data.data;
     } else {
       return false;
     }

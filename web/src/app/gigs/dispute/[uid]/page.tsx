@@ -10,7 +10,15 @@ import {
 } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Briefcase, Calendar, DollarSign, Tag, Users } from "lucide-react";
+import {
+  Briefcase,
+  Calendar,
+  DollarSign,
+  Tag,
+  User,
+  Users,
+  Users2,
+} from "lucide-react";
 import Navbar from "@/components/ui/navbar";
 import { RotatingSlider } from "@/components/ui/RotatingSlider";
 import axios from "axios";
@@ -26,6 +34,8 @@ import {
 import { useAccount } from "wagmi";
 import { GigContractABI } from "@/lib/abis/GigContract";
 import { decodeEventLog } from "viem";
+import { VideoPlayer } from "@/components/ui/videoPlayer";
+import { PinataSDK } from "pinata-web3";
 
 const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
   const [clientFavor, setClientFavor] = useState(50);
@@ -34,10 +44,38 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
   const [validator, setValidator] = useState<any>(null);
   const [verified, setVerified] = useState<Boolean | null>(null);
   const [disputes, setDisputes] = useState<any>(null);
+  const [videoUrl, setVideoUrl] = useState<string>("");
+
   const BASContractAddress = "0x6c2270298b1e6046898a322acB3Cbad6F99f7CBD"; //bnb testnet
   const bas = new BAS(BASContractAddress);
   const signer = useEthersSigner({ chainId: bscTestnet.id });
   const { address } = useAccount();
+
+  const pinata = new PinataSDK({
+    pinataJwt: process.env.PINATA_JWT!,
+    pinataGateway: "orange-select-opossum-767.mypinata.cloud",
+  });
+
+  useEffect(() => {
+    const fetchVideo = async () => {
+      try {
+        if (gig && gig.videoIpfsHash) {
+          console.log(gig.videoIpfsHash);
+          const file = await pinata.gateways.get(gig.videoIpfsHash);
+          console.log(file.data);
+          const url = URL.createObjectURL(file.data as any);
+          setVideoUrl(url); // Step 2: Set the video URL state
+          console.log(url);
+        }
+      } catch (error) {
+        console.error("Error fetching video:", error);
+      }
+    };
+
+    if (gig && gig.videoIpfsHash) {
+      fetchVideo(); // Trigger video fetch when gig and videoHash are available
+    }
+  }, [gig]); // Dependency on gig to re-fetch when gig data changes
 
   const handleSubmitDecision = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +84,7 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
     ("bytes32 refUID,bytes32 validatorUID,address validatorAddress,uint256 clientFavor,string validationDescripton");
 
     const encodedData = schemaEncoder.encodeData([
-      { name: "refUID", value: gig.uid, type: "bytes32" },
+      { name: "refUID", value: gig.disputeAttestationUID, type: "bytes32" },
       {
         name: "validatorUID",
         value: validator.uid,
@@ -193,7 +231,7 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
         {
           isDisputed: true,
           decision: decision,
-          isCompleted: true,
+          IsCompleted: true,
         }
       );
 
@@ -293,6 +331,13 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
                   Deadline: {new Date(gig.deadline).toLocaleDateString()}
                 </span>
               </div>
+              <div className="flex items-center bg-[#FDF7F0] p-3 rounded-lg">
+                <User className="text-[#FF5C00] mr-3" size={24} />
+                <span className="text-[#1E3A8A] font-bold text-lg">
+                  Client: {gig.clientAddress.slice(0, 6)}...
+                  {gig.clientAddress.slice(-4)}
+                </span>
+              </div>
             </div>
             <div className="flex items-center bg-[#FDF7F0] p-3 rounded-lg">
               <Briefcase className="text-[#FF5C00] mr-3" size={24} />
@@ -300,6 +345,34 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
                 Contract: {gig.gigContractAddress.slice(0, 6)}...
                 {gig.gigContractAddress.slice(-4)}
               </span>
+            </div>
+            <div className="flex items-center bg-[#FDF7F0] p-3 rounded-lg">
+              <Users className="text-[#FF5C00] mr-3" size={24} />
+              <span className="text-[#1E3A8A] font-bold text-lg">
+                Freelancer: {gig.freelancerAddress.slice(0, 6)}...
+                {gig.freelancerAddress.slice(-4)}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Dispute History Card */}
+        <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A] overflow-hidden">
+          <CardHeader className="bg-[#FFE1A1] border-b-2 border-[#1E3A8A]">
+            <CardTitle className="text-2xl font-bold text-[#1E3A8A]">
+              Submitted Work
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6 p-6">
+            <div className="mb-4 flex flex-col gap-2 justify-center items-center">
+              <VideoPlayer videoUrl={videoUrl} />{" "}
+              <div className="flex flex-col gap-2 border-2 border-[#1E3A8A] p-1">
+                <p className="text-[#1E3A8A]">Score : {gig.AIScore}</p>
+                <p className="text-[#1E3A8A]">Feedback : {gig.AIFeedback}</p>
+                <p className="text-[#1E3A8A]">
+                  Dispute : {gig.disputeDescription}
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -366,7 +439,6 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
           </CardContent>
         </Card>
 
-        {/* Mock Disputes */}
         <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A] overflow-hidden">
           <CardHeader className="bg-[#FFE1A1] border-b-2 border-[#1E3A8A]">
             <CardTitle className="text-2xl font-bold text-[#1E3A8A] flex justify-between items-center">

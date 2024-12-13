@@ -36,6 +36,7 @@ import { bscTestnet } from "viem/chains";
 import Submission from "@/components/pages/Submission";
 import { VideoPlayer } from "@/components/ui/videoPlayer";
 import { PinataSDK } from "pinata-web3";
+import Link from "next/link";
 
 const GigPage = ({ params }: { params: { uid: string } }) => {
   const [proposal, setProposal] = useState("");
@@ -60,19 +61,14 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
         );
         console.log(response.data[0]);
         setGig(response.data[0]);
+        setIsClient(response.data[0].clientAddress == address?.toLowerCase());
       } catch (error) {
         console.error("Error fetching gig:", error);
       }
     };
 
-    fetchGig();
-  }, [params.uid]);
-
-  useEffect(() => {
-    if (gig && address) {
-      setIsClient(address.toLowerCase() === gig.clientAddress.toLowerCase());
-    }
-  }, [address, gig]);
+    if (address) fetchGig();
+  }, [params.uid, address]);
 
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
@@ -107,7 +103,9 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
         args: [proposal],
       });
       console.log(txhash);
-    } catch (error) {}
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   const handleApply = async (e: React.FormEvent) => {
@@ -121,7 +119,11 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
     setProposal("");
   };
 
-  const handleApplicationAccept = async (applicantUID: string) => {
+  const handleApplicationAccept = async (
+    applicantUID: string,
+    applicantAddress: string
+  ) => {
+    // This is where we write the agreement
     try {
       const schemaEncoder = new SchemaEncoder(gigAgreement);
       const encodedData = schemaEncoder.encodeData([
@@ -158,7 +160,7 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
         address: gig.gigContractAddress,
         abi: GigContractABI,
         functionName: "chooseFreelancer",
-        args: [1, agreementUID],
+        args: [applicantAddress, agreementUID],
       });
       console.log(txhash);
 
@@ -167,7 +169,7 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gig/${gig.uid}`,
         {
           AggrementUid: agreementUID,
-          freelancerAddress: address,
+          freelancerAddress: applicantAddress,
           isAccepted: true,
           freelancerUID: applicantUID,
           IsCompleted: false,
@@ -229,6 +231,29 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
       }
     );
     console.log(response.data);
+  };
+
+  const handleAcceptWork = async () => {
+    const txhash = await walletClient.writeContract({
+      account: address!,
+      address: gig.gigContractAddress,
+      abi: GigContractABI,
+      functionName: "pay",
+    });
+    console.log(txhash);
+    const reciept = await publicClient.waitForTransactionReceipt({
+      hash: txhash,
+    });
+
+    // Store the states in indexer
+
+    const reponse = await axios.put(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gig/${gig.uid}`,
+      {
+        isCompleted: true,
+      }
+    );
+    console.log(reponse.data);
   };
 
   if (!gig) {
@@ -295,7 +320,7 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
             </div>
           </CardContent>
         </Card>
-        {isClient && gig.isAccepted && (
+        {!isClient && !gig.isAccepted && (
           <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A]">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-[#1E3A8A]">
@@ -320,7 +345,7 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
             </CardContent>
           </Card>
         )}
-        {isClient && (
+        {isClient && !gig.isAccepted && (
           <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A]">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-[#1E3A8A]">
@@ -351,7 +376,10 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
                   <Button
                     className="px-6 py-2 bg-[#FF5C00] rounded-full font-bold text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all hover:[&:not(:disabled)]:bg-[#1E3A8A]"
                     onClick={() => {
-                      handleApplicationAccept(applicant.freelancerDetails.uid);
+                      handleApplicationAccept(
+                        applicant.freelancerDetails.uid,
+                        applicant.freelancerAddress
+                      );
                     }}
                   >
                     Accept
@@ -364,19 +392,20 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
         {/* {gig.freelancerAddress === address &&
           gig.isAccepted &&
           !gig.IsSubmitted && ( */}
-        <div>
-          <Submission
-            description={
-              "Apply for gig feature , with a textbox and submit proposal button.The button should be in green color."
-            }
-            gigContarctAddress={gig.gigContractAddress}
-            gigUID={gig.uid}
-            freelancerUID={gig.freelancerUID}
-          />
-        </div>
-        {/* )} */}
+        {!isClient && gig.isAccepted && !gig.IsSubmitted && (
+          <div>
+            <Submission
+              description={
+                "Apply for gig feature , with a textbox and submit proposal button.The button should be in green color."
+              }
+              gigContarctAddress={gig.gigContractAddress}
+              gigUID={gig.uid}
+              freelancerUID={gig.freelancerUID}
+            />
+          </div>
+        )}
 
-        {videoUrl && (
+        {gig.isAccepted && gig.IsSubmitted && videoUrl && (
           <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A]">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-[#1E3A8A]">
@@ -386,23 +415,46 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
             <CardContent>
               <div className="mb-4 flex flex-col gap-2 ">
                 <VideoPlayer videoUrl={videoUrl} />{" "}
-                <Textarea
-                  placeholder="Write your conflict here..."
-                  value={disputeDescription}
-                  onChange={(e) => setDisputeDescription(e.target.value)}
-                  className="mb-4 border-2 border-[#1E3A8A] focus:ring-[#FF5C00] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all text-[#1E3A8A]"
-                />
-                <div className="flex justify-end gap-2">
-                  <Button className="px-6 py-2 bg-[#FF5C00] rounded-full font-bold text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all hover:[&:not(:disabled)]:bg-[#1E3A8A]">
-                    Accept
-                  </Button>
-                  <Button
-                    onClick={handleRaiseDispute}
-                    className="px-6 py-2 bg-[#FF5C00] rounded-full font-bold text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all hover:[&:not(:disabled)]:bg-[#1E3A8A]"
-                  >
-                    Raise Dispute
-                  </Button>
+                <div className="flex flex-col gap-2 border-2 border-[#1E3A8A] p-1">
+                  <p className="text-[#1E3A8A]">Score : {gig.AIScore}</p>
+                  <p className="text-[#1E3A8A]">Feedback : {gig.AIFeedback}</p>
                 </div>
+                {!gig.isDisputeRaised && (
+                  <div>
+                    <Textarea
+                      placeholder="Write your conflict here..."
+                      value={disputeDescription}
+                      onChange={(e) => setDisputeDescription(e.target.value)}
+                      className="mb-4 border-2 border-[#1E3A8A] focus:ring-[#FF5C00] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all text-[#1E3A8A]"
+                    />
+                    <div className="flex justify-end gap-2">
+                      {isClient && (
+                        <Button
+                          onClick={handleAcceptWork}
+                          className="px-6 py-2 bg-[#FF5C00] rounded-full font-bold text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all hover:[&:not(:disabled)]:bg-[#1E3A8A]"
+                        >
+                          Accept
+                        </Button>
+                      )}
+                      <Button
+                        onClick={handleRaiseDispute}
+                        className="px-6 py-2 bg-[#FF5C00] rounded-full font-bold text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all hover:[&:not(:disabled)]:bg-[#1E3A8A]"
+                      >
+                        Raise Dispute
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {gig.isDisputeRaised && (
+                  <div className="flex justify-end gap-2 text-[#1E3A8A]">
+                    <Link
+                      href={`/gigs/dispute/${gig.uid}`}
+                      className="border-dotted border-2 border-[#1E3A8A] px-2 py-1 inline-block"
+                    >
+                      Dispute Raised →
+                    </Link>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

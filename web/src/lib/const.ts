@@ -5,7 +5,7 @@ export const freelancerSchemaUID =
   "0x429ad524f39cc3fcd95c367f0f6d86ea2e5a1966c3facd7903538bb9f2f94888";
 
 export const gigSchemaUID =
-  "0x09dda596e9184559a304d690d78d979836501b0b71315b7786558d6dc4147c46";
+  "0xb3221d0e61e90db95e4a4c1799725caabf8ffdec227897eab359abf3fd6191fe";
 
 export const gigAgreementUID =
   "0x09e3e1dc8c19670ccf128c657bfcb707d792921852df48ce837af27e5666322c";
@@ -26,7 +26,7 @@ export const freelancerSchema =
   "string freelancerName,address freelancerAddress,string freelancerBio,string[] skills,uint256 reputationScore,uint256 noOfGigsCompleted,uint256 noOfDisputesArised,uint256 noOfDisputesWon";
 
 export const gigSchema =
-  "string gigTitle,string gigDescription,string[] gigTags,uint256 gigBudget,uint256 gigDeadliine,address gigClient,address gigContractAddress";
+  "string gigTitle,string gigDescription,string[] gigTags,uint256 gigBudget,uint256 gigDeadliine,address gigClient,bytes32 gigClientUID,address gigContractAddress";
 
 export const gigAgreement =
   "string gigTitle,bytes32 refUID,string gigDescription,uint256 gigDeadline,uint256 gigBudget,bytes32 gigClientUID,bytes32 gigApplicantUID,address gigContractAddress";
@@ -40,5 +40,6 @@ export const gigDisputeSchema =
 export const disputeAttestationSchema =
   "bytes32 refUID,bytes32 validatorUID,address validatorAddress,uint256 clientFavor,string validationDescripton";
 
-export const gigFactoryAddress = "0xC13D441ED0E004aa019cdeE5795b79a571bCBE9F";
+export const gigFactoryAddress = "0xd62378a75cfed3644d39bce139a40d3b27027fb1";
 // 0xd62378a75cfed3644d39bce139a40d3b27027fb1; - redeployed contract
+// 0xc13d441ed0e004aa019cdee5795b79a571bcbe9f; -v1 contract
