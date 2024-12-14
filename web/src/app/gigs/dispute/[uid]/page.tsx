@@ -344,10 +344,15 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
     <div className="min-h-screen bg-[#FDF7F0]">
       <Navbar />
       <div className="container mx-auto px-4 py-8">
-        <StepperModal isOpen={isDecisionSubmitted} steps={decisionSteps} />
+        <StepperModal
+          isOpen={isDecisionSubmitted}
+          steps={decisionSteps}
+          title={"Voting on Dipsute"}
+        />
         <StepperModal
           isOpen={isResolveDisputeSubmitted}
           steps={resolveDisputeSteps}
+          title={"Resolving Dipsute"}
         />
         <h1 className="text-4xl font-black text-[#1E3A8A] mb-8">
           Dispute Resolution

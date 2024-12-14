@@ -47,11 +47,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 interface StepperModalProps {
   isOpen: boolean;
   steps: { label: string; status: "idle" | "loading" | "complete" | "error" }[];
+  title: String;
 }
 
 export const StepperModal: React.FC<StepperModalProps> = ({
   isOpen,
   steps,
+  title,
 }) => {
   if (!isOpen) return null;
 
@@ -60,7 +62,7 @@ export const StepperModal: React.FC<StepperModalProps> = ({
       <Card className="w-full max-w-md border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A]">
         <CardHeader className="bg-[#FFE1A1] border-b-2 border-[#1E3A8A]">
           <CardTitle className="text-2xl font-bold text-[#1E3A8A]">
-            Accepting Application
+            {title}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-6 bg-[#FDF7F0]">

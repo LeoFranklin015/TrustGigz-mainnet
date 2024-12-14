@@ -337,7 +337,11 @@ export default function SubmissionPage({
 
   return (
     <div className="min-h-screen bg-[#FDF7F0]">
-      <StepperModal isOpen={isSubmitting} steps={submitWorkSteps} />
+      <StepperModal
+        isOpen={isSubmitting}
+        steps={submitWorkSteps}
+        title={"Submitting work"}
+      />
       <div className="container mx-auto px-4 py-8">
         <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A]">
           <CardHeader>

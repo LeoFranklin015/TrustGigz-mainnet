@@ -210,7 +210,11 @@ export default function PostJob() {
           onClose={() => setIsOpen(false)}
         />
       )}
-      <StepperModal isOpen={postGigStepper} steps={postGigSteps} />
+      <StepperModal
+        isOpen={postGigStepper}
+        steps={postGigSteps}
+        title={"Posting New Gig"}
+      />
       <div className="container mx-auto max-w-2xl">
         <h1 className="text-4xl font-black text-[#1E3A8A] mb-8 text-center mt-4">
           Post a New Gig

@@ -422,10 +422,26 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
     <div className="min-h-screen bg-[#FDF7F0] py-12 px-4">
       <Navbar />
       <div className="container mx-auto max-w-4xl mt-4">
-        <StepperModal isOpen={isAccepting} steps={applicationSteps} />
-        <StepperModal isOpen={isApplying} steps={applySteps} />
-        <StepperModal isOpen={isDisputing} steps={raiseDisputeSteps} />
-        <StepperModal isOpen={isAcceptingWork} steps={acceptWorkSteps} />
+        <StepperModal
+          isOpen={isAccepting}
+          steps={applicationSteps}
+          title={"Accepting Application"}
+        />
+        <StepperModal
+          isOpen={isApplying}
+          steps={applySteps}
+          title={"Applying to a gig"}
+        />
+        <StepperModal
+          isOpen={isDisputing}
+          steps={raiseDisputeSteps}
+          title={"Raising a Dispute"}
+        />
+        <StepperModal
+          isOpen={isAcceptingWork}
+          steps={acceptWorkSteps}
+          title={"Accepting the work"}
+        />
 
         <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A] radius-2xl">
           <CardHeader>
