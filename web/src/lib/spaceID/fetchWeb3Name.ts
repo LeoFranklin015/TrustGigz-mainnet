@@ -1,13 +1,17 @@
+import axios from "axios";
+
 export const FetchWeb3Name = async (web3name: any, address: any) => {
   if (address) {
     try {
-      const webName = await web3name.getDomainName({
-        address: address,
-        queryChainIdList: [1],
-      });
-      console.log("Fetched Web3 Name:", webName);
-      if (webName) {
-        return webName;
+      // const webName = await web3name.getDomainName(address, {
+      //   rpcURL: "https://ethereum-rpc.publicnode.com",
+      // });
+      // console.log("Fetched Web3 Name:", webName);
+      const response = await axios.get(
+        `https://api.prd.space.id/v1/getName?tld=eth&address=${address}`
+      );
+      if (response.data.name) {
+        return response.data.name;
       } else {
         return null;
       }
@@ -19,10 +23,11 @@ export const FetchWeb3Name = async (web3name: any, address: any) => {
 
 export const resolveAddressToName = async (web3name: any, address: string) => {
   try {
-    const webName = await web3name.getDomainName({
-      address,
-      queryChainIdList: [1], // Adjust chain ID as needed
-    });
+    const response = await axios.get(
+      `https://api.prd.space.id/v1/getName?tld=eth&address=${address}`
+    );
+
+    const webName = response.data.name;
     return webName || address.slice(0, 6) + "..." + address.slice(-4);
   } catch (error) {
     console.error("Error resolving name:", error);

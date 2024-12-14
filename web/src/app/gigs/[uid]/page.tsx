@@ -41,7 +41,6 @@ import Link from "next/link";
 import { createWeb3Name } from "@web3-name-sdk/core";
 import { resolveAddressToName } from "@/lib/spaceID/fetchWeb3Name";
 import { StepperModal, StepStatus } from "@/components/modals/Stepper";
-import { ApplicationStepper } from "@/components/modals/Stepper";
 
 const GigPage = ({ params }: { params: { uid: string } }) => {
   const [proposal, setProposal] = useState("");

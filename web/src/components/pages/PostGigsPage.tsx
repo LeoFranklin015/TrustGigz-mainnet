@@ -191,7 +191,7 @@ export default function PostJob() {
     } finally {
       setTimeout(() => setPostGigStepper(false), 3000);
       // navigate("/");
-      window.location.href = "/gigs";
+      window.location.href = "/yourgigs";
     }
   };
 
