@@ -15,6 +15,7 @@ import { GigContractABI } from "@/lib/abis/GigContract";
 import { PinataSDK } from "pinata-web3";
 import axios from "axios";
 import { useAccount } from "wagmi";
+import { StepperModal, StepStatus, updateStepStatus } from "../modals/Stepper";
 
 export default function SubmissionPage({
   description,
@@ -36,6 +37,18 @@ export default function SubmissionPage({
   const [feedback, setFeedback] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [IpfsHash, setIpfsHash] = useState("");
+  const [submitWorkSteps, setSubmitWorkSteps] = useState([
+    { label: "Ai Video Analysis", status: "idle" as StepStatus },
+    { label: "Uploading to IPFS", status: "idle" as StepStatus },
+    {
+      label: "Creating AI Evaluation Attestation",
+      status: "idle" as StepStatus,
+    },
+    { label: "Contract Interaction", status: "idle" as StepStatus },
+    { label: "Indexing", status: "idle" as StepStatus },
+  ]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const { address } = useAccount();
 
   const openai = new OpenAI({
@@ -101,13 +114,17 @@ export default function SubmissionPage({
 
   const analyzeVideo = async (frames: string[]) => {
     try {
-      const base64Frames = frames.map((dataUrl) => ({
-        type: "image_url",
-        image_url: {
-          url: dataUrl,
-        },
-      }));
-
+      // This is not working throwing some type error , so switched to hardcodeing only 5 frames
+      //
+      //
+      // const base64Frames = frames.map((dataUrl) => ({
+      //   type: "image_url",
+      //   image_url: {
+      //     url: dataUrl,
+      //   },
+      // }));
+      //
+      //
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [
@@ -168,6 +185,8 @@ export default function SubmissionPage({
       return response.choices[0].message.content;
     } catch (error) {
       console.error("Error analyzing video:", error);
+      updateStepStatus(setSubmitWorkSteps, 0, "error");
+      setIsSubmitting(false);
       throw new Error("Failed to analyze video content");
     }
   };
@@ -191,16 +210,24 @@ export default function SubmissionPage({
     try {
       setIsLoading(true);
       setError("");
-
+      setIsSubmitting(true);
+      updateStepStatus(setSubmitWorkSteps, 0, "loading");
       const frames = await extractFrames(videoFile);
       const summary = await analyzeVideo(frames);
       console.log(summary);
       const cleanedSummary = summary!.replace(/```json|```/g, "").trim();
+      updateStepStatus(setSubmitWorkSteps, 1, "loading");
       const hash = await uploadVideoToIPFS();
+      if (hash) {
+        updateStepStatus(setSubmitWorkSteps, 1, "complete");
+      } else {
+        updateStepStatus(setSubmitWorkSteps, 1, "error");
+      }
       setSummary(cleanedSummary || "No summary available");
       const jsonSummary = JSON.parse(cleanedSummary);
       setScore(jsonSummary.score);
       setFeedback(jsonSummary.feedback);
+      updateStepStatus(setSubmitWorkSteps, 0, "complete");
       await createAttestation({
         hash,
         score: jsonSummary.score,
@@ -225,18 +252,7 @@ export default function SubmissionPage({
     feedback: any;
   }) => {
     try {
-      console.log(
-        {
-          message: "Creating AI attestation",
-          gigUID,
-          score,
-          feedback,
-          freelancerUID,
-          hash,
-        },
-        { structuredData: true }
-      );
-
+      updateStepStatus(setSubmitWorkSteps, 2, "loading");
       const schemeEncoder = new SchemaEncoder(aiAttestationSchema);
       const encodedData = schemeEncoder.encodeData([
         { name: "refUID", value: gigUID, type: "bytes32" },
@@ -260,8 +276,10 @@ export default function SubmissionPage({
       const aiAttestationUID = await tx.wait();
 
       console.log(aiAttestationUID);
+      updateStepStatus(setSubmitWorkSteps, 2, "complete");
 
       // Set the Attestation UID in the contract
+      updateStepStatus(setSubmitWorkSteps, 3, "loading");
       const txHash = await walletClient.writeContract({
         account: address!,
         address: gigContarctAddress,
@@ -273,9 +291,10 @@ export default function SubmissionPage({
       await publicClient.waitForTransactionReceipt({
         hash: txHash,
       });
+      updateStepStatus(setSubmitWorkSteps, 3, "complete");
 
       // Add the data to the indexer
-
+      updateStepStatus(setSubmitWorkSteps, 4, "loading");
       const data = await axios.put(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gig/${gigUID}`,
         {
@@ -286,8 +305,21 @@ export default function SubmissionPage({
           AIFeedback: feedback,
         }
       );
+      if (data) {
+        updateStepStatus(setSubmitWorkSteps, 4, "complete");
+      }
     } catch (error) {
+      const currentStep = submitWorkSteps.findIndex(
+        (step) => step.status === "loading"
+      );
+      if (currentStep !== -1) {
+        updateStepStatus(setSubmitWorkSteps, currentStep, "error");
+      }
       console.log(error);
+    } finally {
+      setTimeout(() => {
+        setIsSubmitting(false);
+      }, 2000);
     }
   };
 
@@ -305,6 +337,7 @@ export default function SubmissionPage({
 
   return (
     <div className="min-h-screen bg-[#FDF7F0]">
+      <StepperModal isOpen={isSubmitting} steps={submitWorkSteps} />
       <div className="container mx-auto px-4 py-8">
         <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A]">
           <CardHeader>

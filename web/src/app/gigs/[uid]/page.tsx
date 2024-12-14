@@ -8,7 +8,6 @@ import {
   Tag,
   User,
   Users,
-  Video,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,7 +39,11 @@ import { PinataSDK } from "pinata-web3";
 import Link from "next/link";
 import { createWeb3Name } from "@web3-name-sdk/core";
 import { resolveAddressToName } from "@/lib/spaceID/fetchWeb3Name";
-import { StepperModal, StepStatus } from "@/components/modals/Stepper";
+import {
+  StepperModal,
+  StepStatus,
+  updateStepStatus,
+} from "@/components/modals/Stepper";
 
 const GigPage = ({ params }: { params: { uid: string } }) => {
   const [proposal, setProposal] = useState("");
@@ -70,7 +73,7 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
         console.log(response.data[0]);
         setGig(response.data[0]);
         setIsClient(response.data[0].clientAddress == address?.toLowerCase());
-        const clientResolvedname = await resolveAddressToName(
+        const clientResolvedname: any = await resolveAddressToName(
           web3name,
           // response.data[0].clientAddress
           "0xe6FC3609233197e54f9A0b1C051534bec6ECf79b"
@@ -130,6 +133,7 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
 
   const handleApplicationProposal = async () => {
     try {
+      updateStepStatus(setApplySteps, 0, "loading");
       const txhash = await walletClient.writeContract({
         account: address!,
         address: gig.gigContractAddress,
@@ -138,20 +142,40 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
         args: [proposal],
       });
       console.log(txhash);
+      updateStepStatus(setApplySteps, 0, "complete");
     } catch (error) {
       console.log(error);
+      updateStepStatus(setApplySteps, 0, "error");
     }
   };
 
+  const [applySteps, setApplySteps] = useState([
+    { label: "Contract Interaction", status: "idle" as StepStatus },
+    { label: "Indexing", status: "idle" as StepStatus },
+  ]);
+  const [isApplying, setIsApplying] = useState(false);
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
-    await handleApplicationProposal();
-    const data = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gig/${params.uid}`,
-      { freelancerAddress: address, proposal: proposal }
-    );
-    console.log(data);
-    setProposal("");
+    try {
+      setIsApplying(true);
+      await handleApplicationProposal();
+      updateStepStatus(setApplySteps, 1, "loading");
+      const data = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gig/${params.uid}`,
+        { freelancerAddress: address, proposal: proposal }
+      );
+      console.log(data);
+      updateStepStatus(setApplySteps, 1, "complete");
+    } catch (error) {
+      console.log(error);
+      updateStepStatus(setApplySteps, 1, "error");
+    } finally {
+      setProposal("");
+
+      setTimeout(() => {
+        setIsApplying(false);
+      }, 2000);
+    }
   };
 
   // Stepper for application
@@ -162,16 +186,6 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
   ]);
 
   const [isAccepting, setIsAccepting] = useState(false);
-  const updateStepStatus = (
-    index: number,
-    status: "idle" | "loading" | "complete" | "error"
-  ) => {
-    setApplicationSteps((steps: any) =>
-      steps.map((step: any, i: any) =>
-        i === index ? { ...step, status } : step
-      )
-    );
-  };
 
   const handleApplicationAccept = async (
     applicantUID: string,
@@ -180,7 +194,7 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
     // This is where we write the agreement
     setIsAccepting(true);
     try {
-      updateStepStatus(0, "loading");
+      updateStepStatus(setApplicationSteps, 0, "loading");
       const schemaEncoder = new SchemaEncoder(gigAgreement);
       const encodedData = schemaEncoder.encodeData([
         { name: "gigTitle", value: gig.gigName, type: "string" },
@@ -209,10 +223,10 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
       });
       const agreementUID = await tx.wait();
       console.log(agreementUID);
-      updateStepStatus(0, "complete");
+      updateStepStatus(setApplicationSteps, 0, "complete");
 
       //Write to contract
-      updateStepStatus(1, "loading");
+      updateStepStatus(setApplicationSteps, 1, "loading");
       const txhash = await walletClient.writeContract({
         account: address!,
         address: gig.gigContractAddress,
@@ -224,11 +238,11 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
       const reciept = await publicClient.waitForTransactionReceipt({
         hash: txhash,
       });
-      updateStepStatus(1, "complete");
+      updateStepStatus(setApplicationSteps, 1, "complete");
 
       // Store this in db to index
 
-      updateStepStatus(2, "loading");
+      updateStepStatus(setApplicationSteps, 2, "loading");
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gig/${gig.uid}`,
         {
@@ -240,13 +254,13 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
         }
       );
       console.log(response.data);
-      updateStepStatus(2, "complete");
+      updateStepStatus(setApplicationSteps, 2, "complete");
     } catch (error) {
       const currentStep = applicationSteps.findIndex(
         (step) => step.status === "loading"
       );
       if (currentStep !== -1) {
-        updateStepStatus(currentStep, "error");
+        updateStepStatus(setApplicationSteps, currentStep, "error");
       }
       console.log(error);
     } finally {
@@ -254,79 +268,134 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
     }
   };
 
+  const [raiseDisputeSteps, setRaiseDisputeSteps] = useState([
+    { label: "Attestation", status: "idle" as StepStatus },
+    { label: "Contract Interaction", status: "idle" as StepStatus },
+    { label: "Indexing", status: "idle" as StepStatus },
+  ]);
+  const [isDisputing, setIsDisputing] = useState(false);
   const handleRaiseDispute = async (e: React.FormEvent) => {
     e.preventDefault();
-    const schemeEncoder = new SchemaEncoder(gigDisputeSchema);
-    const encodedData = schemeEncoder.encodeData([
-      { name: "refUID", value: gig.uid, type: "bytes32" },
-      { name: "disputeDescription", value: disputeDescription, type: "string" },
-      { name: "clientUID", value: gig.clientUID, type: "bytes32" },
-      { name: "freelancerUID", value: gig.freelancerUID, type: "bytes32" },
-    ]);
-    const schemaUID = gigDisputeSchemaUID;
-    bas.connect(signer!);
-    const tx = await bas.attest({
-      schema: schemaUID,
-      data: {
-        recipient: gig.gigContractAddress,
-        expirationTime: BigInt(0),
-        revocable: true, // Be aware that if your schema is not revocable, this MUST be false
-        data: encodedData,
-      },
-    });
-    const disputeUID = await tx.wait();
-    console.log(disputeUID);
+    try {
+      setIsDisputing(true);
+      updateStepStatus(setRaiseDisputeSteps, 0, "loading");
+      const schemeEncoder = new SchemaEncoder(gigDisputeSchema);
+      const encodedData = schemeEncoder.encodeData([
+        { name: "refUID", value: gig.uid, type: "bytes32" },
+        {
+          name: "disputeDescription",
+          value: disputeDescription,
+          type: "string",
+        },
+        { name: "clientUID", value: gig.clientUID, type: "bytes32" },
+        { name: "freelancerUID", value: gig.freelancerUID, type: "bytes32" },
+      ]);
+      const schemaUID = gigDisputeSchemaUID;
+      bas.connect(signer!);
+      const tx = await bas.attest({
+        schema: schemaUID,
+        data: {
+          recipient: gig.gigContractAddress,
+          expirationTime: BigInt(0),
+          revocable: true, // Be aware that if your schema is not revocable, this MUST be false
+          data: encodedData,
+        },
+      });
+      const disputeUID = await tx.wait();
+      console.log(disputeUID);
+      updateStepStatus(setRaiseDisputeSteps, 0, "complete");
 
-    // Write the dispute in the contract
+      // Write the dispute in the contract
 
-    const txhash = await walletClient.writeContract({
-      account: address!,
-      address: gig.gigContractAddress,
-      abi: GigContractABI,
-      functionName: "raiseDispute",
-      args: [disputeUID, disputeDescription],
-    });
+      updateStepStatus(setRaiseDisputeSteps, 1, "loading");
+      const txhash = await walletClient.writeContract({
+        account: address!,
+        address: gig.gigContractAddress,
+        abi: GigContractABI,
+        functionName: "raiseDispute",
+        args: [disputeUID, disputeDescription],
+      });
 
-    const reciept = await publicClient.waitForTransactionReceipt({
-      hash: txhash,
-    });
-    console.log(reciept.logs);
+      const reciept = await publicClient.waitForTransactionReceipt({
+        hash: txhash,
+      });
+      console.log(reciept.logs);
+      updateStepStatus(setRaiseDisputeSteps, 1, "complete");
 
-    // Store the states in indexer
-
-    const response = await axios.put(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gig/${gig.uid}`,
-      {
-        isDisputeRaised: true,
-        disputeAttestationUID: disputeUID,
-        disputeDescription: disputeDescription,
-        isDisputed: false,
+      // Store the states in indexer
+      updateStepStatus(setRaiseDisputeSteps, 2, "loading");
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gig/${gig.uid}`,
+        {
+          isDisputeRaised: true,
+          disputeAttestationUID: disputeUID,
+          disputeDescription: disputeDescription,
+          isDisputed: false,
+        }
+      );
+      console.log(response.data);
+      if (response.data) {
+        updateStepStatus(setRaiseDisputeSteps, 2, "complete");
       }
-    );
-    console.log(response.data);
+    } catch (error) {
+      const currentStep = raiseDisputeSteps.findIndex(
+        (step) => step.status === "loading"
+      );
+      if (currentStep !== -1) {
+        updateStepStatus(setRaiseDisputeSteps, currentStep, "error");
+      }
+      console.log(error);
+    } finally {
+      setTimeout(() => setIsDisputing(false), 2000);
+    }
   };
 
+  const [acceptWorkSteps, setAcceptWorksSteps] = useState([
+    { label: "Contract Interaction", status: "idle" as StepStatus },
+    { label: "Store in Indexer", status: "idle" as StepStatus },
+  ]);
+
+  const [isAcceptingWork, setIsAcceptingWork] = useState(false);
+
   const handleAcceptWork = async () => {
-    const txhash = await walletClient.writeContract({
-      account: address!,
-      address: gig.gigContractAddress,
-      abi: GigContractABI,
-      functionName: "pay",
-    });
-    console.log(txhash);
-    const reciept = await publicClient.waitForTransactionReceipt({
-      hash: txhash,
-    });
+    try {
+      setIsAcceptingWork(true);
+      updateStepStatus(setAcceptWorksSteps, 0, "loading");
+      const txhash = await walletClient.writeContract({
+        account: address!,
+        address: gig.gigContractAddress,
+        abi: GigContractABI,
+        functionName: "pay",
+      });
+      console.log(txhash);
+      const reciept = await publicClient.waitForTransactionReceipt({
+        hash: txhash,
+      });
 
-    // Store the states in indexer
-
-    const reponse = await axios.put(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gig/${gig.uid}`,
-      {
-        isCompleted: true,
+      updateStepStatus(setAcceptWorksSteps, 0, "complete");
+      // Store the states in indexer
+      updateStepStatus(setAcceptWorksSteps, 1, "loading");
+      const reponse = await axios.put(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gig/${gig.uid}`,
+        {
+          isCompleted: true,
+        }
+      );
+      console.log(reponse.data);
+      if (reponse.data) {
+        updateStepStatus(setAcceptWorksSteps, 1, "complete");
       }
-    );
-    console.log(reponse.data);
+    } catch (error) {
+      const currentStep = acceptWorkSteps.findIndex(
+        (step) => step.status === "loading"
+      );
+      if (currentStep !== -1) {
+        updateStepStatus(setAcceptWorksSteps, currentStep, "error");
+      }
+      console.log(error);
+    } finally {
+      setTimeout(() => setIsAcceptingWork(false), 2000);
+    }
   };
 
   if (!gig) {
@@ -345,6 +414,10 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
       <Navbar />
       <div className="container mx-auto max-w-4xl mt-4">
         <StepperModal isOpen={isAccepting} steps={applicationSteps} />
+        <StepperModal isOpen={isApplying} steps={applySteps} />
+        <StepperModal isOpen={isDisputing} steps={raiseDisputeSteps} />
+        <StepperModal isOpen={isAcceptingWork} steps={acceptWorkSteps} />
+
         <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A] radius-2xl">
           <CardHeader>
             <CardTitle className="text-3xl font-black text-[#1E3A8A]">

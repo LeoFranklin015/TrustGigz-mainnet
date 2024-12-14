@@ -17,7 +17,6 @@ import {
   Tag,
   User,
   Users,
-  Users2,
 } from "lucide-react";
 import Navbar from "@/components/ui/navbar";
 import { RotatingSlider } from "@/components/ui/RotatingSlider";
@@ -36,6 +35,7 @@ import { GigContractABI } from "@/lib/abis/GigContract";
 import { decodeEventLog } from "viem";
 import { VideoPlayer } from "@/components/ui/videoPlayer";
 import { PinataSDK } from "pinata-web3";
+import { StepStatus, updateStepStatus } from "@/components/modals/Stepper";
 
 const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
   const [clientFavor, setClientFavor] = useState(50);
@@ -77,56 +77,79 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
     }
   }, [gig]); // Dependency on gig to re-fetch when gig data changes
 
+  const [decisionSteps, setDecisionSteps] = useState([
+    { label: "VoteAttestation", status: "idle" as StepStatus },
+    { label: "Indexing", status: "idle" as StepStatus },
+  ]);
+
+  const [isDecisionSubmitted, setIsDecisionSubmitted] = useState(false);
   const handleSubmitDecision = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Decision submitted:", { clientFavor, decision });
-    const schemaEncoder = new SchemaEncoder(disputeAttestationSchema);
-    ("bytes32 refUID,bytes32 validatorUID,address validatorAddress,uint256 clientFavor,string validationDescripton");
-
-    const encodedData = schemaEncoder.encodeData([
-      { name: "refUID", value: gig.disputeAttestationUID, type: "bytes32" },
-      {
-        name: "validatorUID",
-        value: validator.uid,
-        type: "bytes32",
-      },
-      { name: "validatorAddress", value: address, type: "address" },
-      { name: "clientFavor", value: clientFavor, type: "uint256" },
-      { name: "validationDescripton", value: decision, type: "string" },
-    ]);
-
-    const schemaUID = disputeAttestationSchemaUID;
-    bas.connect(signer!);
-    const tx = await bas.attest({
-      schema: schemaUID,
-      data: {
-        recipient: gig.gigContractAddress,
-        expirationTime: BigInt(0),
-        revocable: true,
-        data: encodedData,
-      },
-    });
-
-    const attestationUID = await tx.wait();
-    console.log(attestationUID);
-
-    // Store this data to index this.
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/dispute`,
-        {
-          uid: attestationUID,
-          refUID: gig.disputeAttestationUID,
-          validatorAddress: address,
-          validatorUID: validator.uid,
-          clientFavor: clientFavor,
-          validationDescription: decision,
-        }
-      );
+      setIsDecisionSubmitted(true);
+      updateStepStatus(setDecisionSteps, 0, "loading");
+      console.log("Decision submitted:", { clientFavor, decision });
+      const schemaEncoder = new SchemaEncoder(disputeAttestationSchema);
+      ("bytes32 refUID,bytes32 validatorUID,address validatorAddress,uint256 clientFavor,string validationDescripton");
 
-      console.log(response.data);
+      const encodedData = schemaEncoder.encodeData([
+        { name: "refUID", value: gig.disputeAttestationUID, type: "bytes32" },
+        {
+          name: "validatorUID",
+          value: validator.uid,
+          type: "bytes32",
+        },
+        { name: "validatorAddress", value: address, type: "address" },
+        { name: "clientFavor", value: clientFavor, type: "uint256" },
+        { name: "validationDescripton", value: decision, type: "string" },
+      ]);
+
+      const schemaUID = disputeAttestationSchemaUID;
+      bas.connect(signer!);
+      const tx = await bas.attest({
+        schema: schemaUID,
+        data: {
+          recipient: gig.gigContractAddress,
+          expirationTime: BigInt(0),
+          revocable: true,
+          data: encodedData,
+        },
+      });
+
+      const attestationUID = await tx.wait();
+      console.log(attestationUID);
+      updateStepStatus(setDecisionSteps, 0, "complete");
+
+      // Store this data to index this.
+      try {
+        updateStepStatus(setDecisionSteps, 1, "loading");
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/dispute`,
+          {
+            uid: attestationUID,
+            refUID: gig.disputeAttestationUID,
+            validatorAddress: address,
+            validatorUID: validator.uid,
+            clientFavor: clientFavor,
+            validationDescription: decision,
+          }
+        );
+
+        console.log(response.data);
+        if (response.data) {
+          updateStepStatus(setDecisionSteps, 1, "complete");
+        }
+      } catch (error) {
+        updateStepStatus(setDecisionSteps, 1, "error");
+        console.log(error);
+      }
     } catch (error) {
+      updateStepStatus(setDecisionSteps, 0, "error");
       console.log(error);
+    } finally {
+      setTimeout(() => {
+        setIsDecisionSubmitted(false);
+      }, 2000);
     }
   };
 
@@ -190,9 +213,19 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
     return { totalFreelancerVotePercentage, totalClientVotePercentage };
   };
 
+  const [resolveDisputeSteps, setResolveDisputeSteps] = useState([
+    { label: "Contract Interaction", status: "idle" as StepStatus },
+    { label: "Indexing", status: "idle" as StepStatus },
+  ]);
+
+  const [isResolveDisputeSubmitted, setIsResolveDisputeSubmitted] =
+    useState(false);
+
   const handleResolveDispute = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      setIsResolveDisputeSubmitted(true);
+      updateStepStatus(setResolveDisputeSteps, 0, "loading");
       const { totalFreelancerVotePercentage, totalClientVotePercentage } =
         calculateTotalPercentage();
 
@@ -224,8 +257,10 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
 
       console.log(decision);
 
-      // Store this data to indexer
+      updateStepStatus(setResolveDisputeSteps, 0, "complete");
 
+      // Store this data to indexer
+      updateStepStatus(setResolveDisputeSteps, 1, "loading");
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gig/${gig.uid}`,
         {
@@ -236,7 +271,16 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
       );
 
       console.log(response.data);
+      if (response.data) {
+        updateStepStatus(setResolveDisputeSteps, 1, "complete");
+      }
     } catch (error) {
+      const currentStep = resolveDisputeSteps.findIndex(
+        (step) => step.status === "loading"
+      );
+      if (currentStep !== -1) {
+        updateStepStatus(setResolveDisputeSteps, currentStep, "error");
+      }
       console.log(error);
     }
   };

@@ -70,3 +70,13 @@ export const StepperModal: React.FC<StepperModalProps> = ({
     </div>
   );
 };
+
+export const updateStepStatus = (
+  setter: React.Dispatch<React.SetStateAction<any>>,
+  index: number,
+  status: "idle" | "loading" | "complete" | "error"
+) => {
+  setter((steps: any) =>
+    steps.map((step: any, i: any) => (i === index ? { ...step, status } : step))
+  );
+};
