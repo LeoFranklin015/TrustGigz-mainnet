@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
 import OpenAI from "openai";
 import { BAS, SchemaEncoder } from "@bnb-attestation-service/bas-sdk";
 import { publicClient, useEthersSigner, walletClient } from "@/lib/viemClient";
-import { bscTestnet } from "viem/chains";
+import { bsc } from "viem/chains";
 import { aiAttestationSchema, aiAttestationSchemaUID } from "@/lib/const";
 import { GigContractABI } from "@/lib/abis/GigContract";
 import { PinataSDK } from "pinata-web3";
@@ -56,9 +56,9 @@ export default function SubmissionPage({
     dangerouslyAllowBrowser: true,
   });
 
-  const BASContractAddress = "0x6c2270298b1e6046898a322acB3Cbad6F99f7CBD"; //bnb testnet
+  const BASContractAddress = "0x247Fe62d887bc9410c3848DF2f322e52DA9a51bC"; // bnb mainnet
   const bas = new BAS(BASContractAddress);
-  const signer = useEthersSigner({ chainId: bscTestnet.id });
+  const signer = useEthersSigner({ chainId: bsc.id });
 
   const extractFrames = async (
     file: File,

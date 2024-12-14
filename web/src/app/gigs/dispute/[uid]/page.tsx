@@ -25,7 +25,7 @@ import TransgateConnect from "@zkpass/transgate-js-sdk";
 import { verifyEVMMessageSignature } from "@/lib/verifyZKPass";
 import { BAS, SchemaEncoder } from "@bnb-attestation-service/bas-sdk";
 import { publicClient, useEthersSigner, walletClient } from "@/lib/viemClient";
-import { bscTestnet } from "viem/chains";
+import { bsc } from "viem/chains";
 import {
   disputeAttestationSchema,
   disputeAttestationSchemaUID,
@@ -50,9 +50,9 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
   const [disputes, setDisputes] = useState<any>(null);
   const [videoUrl, setVideoUrl] = useState<string>("");
 
-  const BASContractAddress = "0x6c2270298b1e6046898a322acB3Cbad6F99f7CBD"; //bnb testnet
+  const BASContractAddress = "0x247Fe62d887bc9410c3848DF2f322e52DA9a51bC"; // bnb mainnet
   const bas = new BAS(BASContractAddress);
-  const signer = useEthersSigner({ chainId: bscTestnet.id });
+  const signer = useEthersSigner({ chainId: bsc.id });
   const { address } = useAccount();
 
   const pinata = new PinataSDK({

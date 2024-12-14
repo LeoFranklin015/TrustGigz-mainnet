@@ -32,7 +32,7 @@ import {
   gigDisputeSchema,
   gigDisputeSchemaUID,
 } from "@/lib/const";
-import { bscTestnet } from "viem/chains";
+import { bsc } from "viem/chains";
 import Submission from "@/components/pages/Submission";
 import { VideoPlayer } from "@/components/ui/videoPlayer";
 import { PinataSDK } from "pinata-web3";
@@ -51,9 +51,9 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
   const [gig, setGig] = useState<any>(null);
   const [disputeDescription, setDisputeDescription] = useState("");
   const { address } = useAccount();
-  const BASContractAddress = "0x6c2270298b1e6046898a322acB3Cbad6F99f7CBD"; //bnb testnet
+  const BASContractAddress = "0x247Fe62d887bc9410c3848DF2f322e52DA9a51bC"; // bnb mainnet
   const bas = new BAS(BASContractAddress);
-  const signer = useEthersSigner({ chainId: bscTestnet.id });
+  const signer = useEthersSigner({ chainId: bsc.id });
   const [resolvedClientAddress, setResolvedClientAddress] = useState("");
   const [resolvedFreelancerAddress, setResolvedFreelancerAddress] =
     useState("");

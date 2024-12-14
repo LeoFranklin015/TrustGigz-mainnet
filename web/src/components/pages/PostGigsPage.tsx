@@ -11,7 +11,7 @@ import { gigFactoryAddress, gigSchema, gigSchemaUID } from "@/lib/const";
 import { GigFactoryContractABI } from "@/lib/abis/GigFactory";
 import { decodeEventLog } from "viem";
 import { BAS, SchemaEncoder } from "@bnb-attestation-service/bas-sdk";
-import { bscTestnet } from "viem/chains";
+import { bsc } from "viem/chains";
 import axios from "axios";
 import { StepperModal, StepStatus } from "../modals/Stepper";
 
@@ -33,9 +33,9 @@ export default function PostJob() {
   ]);
   const [postGigStepper, setPostGigStepper] = useState(false);
 
-  const BASContractAddress = "0x6c2270298b1e6046898a322acB3Cbad6F99f7CBD"; //bnb testnet
+  const BASContractAddress = "0x247Fe62d887bc9410c3848DF2f322e52DA9a51bC"; // bnb mainnet
   const bas = new BAS(BASContractAddress);
-  const signer = useEthersSigner({ chainId: bscTestnet.id });
+  const signer = useEthersSigner({ chainId: bsc.id });
 
   const handleAddTag = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && tag.trim()) {

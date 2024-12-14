@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import axios from "axios";
 import { BAS, SchemaEncoder } from "@bnb-attestation-service/bas-sdk";
 import { useEthersSigner } from "@/lib/viemClient";
-import { bscTestnet } from "viem/chains";
+import { bsc } from "viem/chains";
 import { useAccount } from "wagmi";
 import { freelancerSchemaUID, freelancerSchema } from "@/lib/const";
 import { StepperModal, StepStatus, updateStepStatus } from "./Stepper";
@@ -23,9 +23,9 @@ const FreelancerProfileSetupModal: React.FC<ProfileSetupModalProps> = ({
   const [bio, setBio] = useState("");
   const [skill, setSkill] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
-  const BASContractAddress = "0x6c2270298b1e6046898a322acB3Cbad6F99f7CBD"; //bnb testnet
+  const BASContractAddress = "0x247Fe62d887bc9410c3848DF2f322e52DA9a51bC"; // bnb mainnet
   const bas = new BAS(BASContractAddress);
-  const signer = useEthersSigner({ chainId: bscTestnet.id });
+  const signer = useEthersSigner({ chainId: bsc.id });
   const { address } = useAccount();
 
   const [freelancerSteps, setFreelancerSteps] = useState([

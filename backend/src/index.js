@@ -17,6 +17,8 @@ const port = process.env.PORT || 5000;
 // CORS configuration
 const corsOptions = {
   origin: [
+    "https://trustgigz-mainnet.vercel.app",
+    "https://trust-gigz-mainnet.vercel.app",
     "http://localhost:3000", // Next.js default dev server
     "https://trustgigz.vercel.app", // Production domain (replace with actual domain)
     "*", // Be cautious with this in production

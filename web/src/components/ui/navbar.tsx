@@ -32,8 +32,7 @@ const NavbarConnectButton = () => {
   useEffect(() => {
     if (address && address != lastFetchedAddress) {
       console.log(address);
-      // handleFetchWeb3Name(address as any);
-      handleFetchWeb3Name("0xe6FC3609233197e54f9A0b1C051534bec6ECf79b");
+      handleFetchWeb3Name(address);
     }
   }, [address]);
   return (
@@ -109,7 +108,8 @@ const NavbarConnectButton = () => {
                       )}
                     </div>
                   )}
-                  {chain.name}
+                  {/* {chain.name} */}
+                  Binance Smart Chain Mainnet
                 </button>
 
                 <button
