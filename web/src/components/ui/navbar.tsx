@@ -163,26 +163,39 @@
 
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from "next/link";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { createWeb3Name } from "@web3-name-sdk/core";
 import { FetchWeb3Name } from "@/lib/spaceID/fetchWeb3Name";
+import { useAccount } from "wagmi";
 
 // Separate component for ConnectButton
 const NavbarConnectButton = () => {
   const web3name = useMemo(() => createWeb3Name(), []);
   const [web3Name, setWeb3Name] = useState("");
 
-  const handleFetchWeb3Name = async (account: { address: string }) => {
-    try {
-      const webName = await FetchWeb3Name(web3name, account.address);
-      if (webName) {
-        setWeb3Name(webName);
+  const [lastFetchedAddress, setLastFetchedAddress] = useState("");
+  const { address } = useAccount();
+  const handleFetchWeb3Name = useCallback(async (address: string) => {
+    if (address && address !== lastFetchedAddress) {
+      try {
+        const webName = await FetchWeb3Name(web3name, address);
+        console.log(webName);
+        if (webName) {
+          setWeb3Name(webName);
+          setLastFetchedAddress(address);
+        }
+      } catch (error) {
+        console.error("Failed to fetch Web3 Name:", error);
       }
-    } catch (error) {
-      console.error("Failed to fetch Web3 Name:", error);
     }
-  };
+  }, []);
 
+  useEffect(() => {
+    if (address && address != lastFetchedAddress) {
+      console.log(address);
+      handleFetchWeb3Name(address as any);
+    }
+  }, [address]);
   return (
     <ConnectButton.Custom>
       {({
@@ -200,11 +213,6 @@ const NavbarConnectButton = () => {
           account &&
           chain &&
           (!authenticationStatus || authenticationStatus === "authenticated");
-
-        // Trigger Web3 name fetch when account is connected
-        if (connected && account && !web3Name) {
-          handleFetchWeb3Name(account);
-        }
 
         return (
           <div
