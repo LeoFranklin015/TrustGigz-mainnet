@@ -39,6 +39,7 @@ router.get("/:uid", async (req, res) => {
 // Create new gig
 router.post("/", async (req, res) => {
   try {
+    console.log("Received gig creation request:", req.body);
     const {
       uid,
       gigName,
@@ -50,6 +51,14 @@ router.post("/", async (req, res) => {
       clientAddress,
       clientUID,
     } = req.body;
+
+    // Validate input
+    if (!uid || !gigName || !gigContractAddress) {
+      return res.status(400).json({
+        message: "Missing required fields",
+        receivedFields: Object.keys(req.body)
+      });
+    }
 
     // Check if gig already exists
     const existingGig = await Gig.findOne({
@@ -79,9 +88,11 @@ router.post("/", async (req, res) => {
     await newGig.save();
     res.status(201).json(newGig);
   } catch (error) {
+    console.error("Full error in gig creation:", error);
     res.status(500).json({
       message: "Error creating gig",
       error: error.message,
+      stack: error.stack
     });
   }
 });

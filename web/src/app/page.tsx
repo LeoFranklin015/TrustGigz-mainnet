@@ -41,7 +41,7 @@ export default function Homepage() {
         </div>
         <div className="lg:w-1/2 mt-8 lg:mt-0 flex justify-center items-center">
           <Image
-            src="/placeholder.svg?height=600&width=600"
+            src="/logos/Hero.png"
             alt="Trust-Powered Freelance Marketplace Illustration"
             width={600}
             height={600}

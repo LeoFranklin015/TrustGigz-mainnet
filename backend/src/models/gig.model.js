@@ -68,11 +68,9 @@ const gigSchema = new mongoose.Schema(
     },
     AggrementUid: {
       type: String,
-      unique: true,
     },
     AIAttestationUID: {
       type: String,
-      unique: true,
     },
     AIScore: {
       type: Number,
@@ -88,7 +86,6 @@ const gigSchema = new mongoose.Schema(
     },
     disputeAttestationUID: {
       type: String,
-      unique: true,
     },
     disputeDescription: {
       type: String,

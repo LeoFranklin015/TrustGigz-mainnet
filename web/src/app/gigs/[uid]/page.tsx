@@ -57,6 +57,7 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
   const [resolvedClientAddress, setResolvedClientAddress] = useState("");
   const [resolvedFreelancerAddress, setResolvedFreelancerAddress] =
     useState("");
+  const [refresh, setRefresh] = useState(false);
   const web3name = createWeb3Name();
 
   const pinata = new PinataSDK({
@@ -106,7 +107,7 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
     };
 
     if (address) fetchGig();
-  }, [params.uid, address]);
+  }, [params.uid, address, refresh]);
 
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
@@ -142,6 +143,9 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
         args: [proposal],
       });
       console.log(txhash);
+      const recipet = await publicClient.waitForTransactionReceipt({
+        hash: txhash,
+      });
       updateStepStatus(setApplySteps, 0, "complete");
     } catch (error) {
       console.log(error);
@@ -175,6 +179,7 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
       setTimeout(() => {
         setIsApplying(false);
       }, 2000);
+      setRefresh((prevRefresh) => !prevRefresh);
     }
   };
 
@@ -265,6 +270,7 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
       console.log(error);
     } finally {
       setTimeout(() => setIsAccepting(false), 2000);
+      setRefresh((prevRefresh) => !prevRefresh);
     }
   };
 
@@ -347,6 +353,7 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
       console.log(error);
     } finally {
       setTimeout(() => setIsDisputing(false), 2000);
+      setRefresh((prevRefresh) => !prevRefresh);
     }
   };
 
@@ -395,6 +402,7 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
       console.log(error);
     } finally {
       setTimeout(() => setIsAcceptingWork(false), 2000);
+      setRefresh((prevRefresh) => !prevRefresh);
     }
   };
 

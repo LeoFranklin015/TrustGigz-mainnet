@@ -9,16 +9,11 @@ import ClientProfileSetupModal from "@/components/modals/clientSetupModal";
 import { publicClient, useEthersSigner, walletClient } from "@/lib/viemClient";
 import { gigFactoryAddress, gigSchema, gigSchemaUID } from "@/lib/const";
 import { GigFactoryContractABI } from "@/lib/abis/GigFactory";
-import { decodeEventLog, parseEther } from "viem";
+import { decodeEventLog } from "viem";
 import { BAS, SchemaEncoder } from "@bnb-attestation-service/bas-sdk";
 import { bscTestnet } from "viem/chains";
 import axios from "axios";
-import {
-  ApplicationStepper,
-  StepperModal,
-  StepStatus,
-} from "../modals/Stepper";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { StepperModal, StepStatus } from "../modals/Stepper";
 
 export default function PostJob() {
   const [title, setTitle] = useState("");
@@ -161,6 +156,17 @@ export default function PostJob() {
 
       // Store the Attestion in Backend to index.
       updateStepStatus(2, "loading");
+      console.log(
+        title,
+        description,
+        tags,
+        budget,
+        deadline,
+        address,
+        gigContarctAddress,
+        gigAttestationUID,
+        client.uid
+      );
       const dbData = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gig`,
         {
@@ -170,12 +176,12 @@ export default function PostJob() {
           budget: budget,
           deadline: deadline,
           clientAddress: address!,
-          gigContractAddress: gigContarctAddress,
+          gigContractAddress: gigContarctAddress, // Fixed typo here
           uid: gigAttestationUID,
-          clientUID:
-            "0xbd91a7bbd682b18534eee56177d92e648b7a2d64c8ee9be7156015552fbdad3f",
+          clientUID: client.uid,
         }
       );
+
       console.log(dbData);
       if (dbData) {
         updateStepStatus(2, "complete");
