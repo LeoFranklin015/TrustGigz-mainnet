@@ -8,6 +8,7 @@ import { useEthersSigner } from "@/lib/viemClient";
 import { bscTestnet } from "viem/chains";
 import { useAccount } from "wagmi";
 import { freelancerSchemaUID, freelancerSchema } from "@/lib/const";
+import { StepperModal, StepStatus, updateStepStatus } from "./Stepper";
 
 interface ProfileSetupModalProps {
   isOpen: boolean;
@@ -27,6 +28,11 @@ const FreelancerProfileSetupModal: React.FC<ProfileSetupModalProps> = ({
   const signer = useEthersSigner({ chainId: bscTestnet.id });
   const { address } = useAccount();
 
+  const [freelancerSteps, setFreelancerSteps] = useState([
+    { label: "Creating Attestation", status: "idle" as StepStatus },
+    { label: "Indexing", status: "idle" as StepStatus },
+  ]);
+  const [freelancerStepper, setFreelancerStepper] = useState(false);
   const handleAddSkill = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && skill.trim()) {
       e.preventDefault();
@@ -42,6 +48,8 @@ const FreelancerProfileSetupModal: React.FC<ProfileSetupModalProps> = ({
   if (!isOpen) return null;
 
   const createFreelancer = async () => {
+    setFreelancerStepper(true);
+    updateStepStatus(setFreelancerSteps, 0, "loading");
     const schemaEncoder = new SchemaEncoder(freelancerSchema);
 
     const encodedData = schemaEncoder.encodeData([
@@ -72,7 +80,9 @@ const FreelancerProfileSetupModal: React.FC<ProfileSetupModalProps> = ({
     });
 
     const newAttestationUID = await tx.wait();
+    updateStepStatus(setFreelancerSteps, 0, "complete");
     try {
+      updateStepStatus(setFreelancerSteps, 1, "loading");
       const dataStoredinDb = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/freelancer`,
         {
@@ -85,7 +95,14 @@ const FreelancerProfileSetupModal: React.FC<ProfileSetupModalProps> = ({
       );
 
       console.log(dataStoredinDb);
+      updateStepStatus(setFreelancerSteps, 1, "complete");
     } catch (error) {
+      const currentStep = freelancerSteps.findIndex(
+        (step) => step.status === "loading"
+      );
+      if (currentStep !== -1) {
+        updateStepStatus(setFreelancerSteps, currentStep, "error");
+      }
       console.log(error);
     }
 
@@ -95,6 +112,11 @@ const FreelancerProfileSetupModal: React.FC<ProfileSetupModalProps> = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-[#FDF7F0] rounded-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <StepperModal
+          isOpen={freelancerStepper}
+          steps={freelancerSteps}
+          title="Creating Freelancer Profile"
+        />
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-black text-[#1E3A8A]">
             Create Freelancer Profile

@@ -8,6 +8,7 @@ import { useEthersSigner } from "@/lib/viemClient";
 import { bscTestnet } from "viem/chains";
 import { useAccount } from "wagmi";
 import { clientSchemaUID } from "@/lib/const";
+import { StepperModal, StepStatus, updateStepStatus } from "./Stepper";
 
 interface ProfileSetupModalProps {
   isOpen: boolean;
@@ -26,6 +27,11 @@ const ClientProfileSetupModal: React.FC<ProfileSetupModalProps> = ({
   const bas = new BAS(BASContractAddress);
   const signer = useEthersSigner({ chainId: bscTestnet.id });
   const { address } = useAccount();
+  const [postClientSteps, setPostClientSteps] = useState([
+    { label: "Attestation", status: "idle" as StepStatus },
+    { label: "Indexing", status: "idle" as StepStatus },
+  ]);
+  const [postClientStepper, setPostClientStepper] = useState(false);
 
   const handleAddCategory = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && category.trim()) {
@@ -42,6 +48,8 @@ const ClientProfileSetupModal: React.FC<ProfileSetupModalProps> = ({
   if (!isOpen) return null;
 
   const createClient = async () => {
+    setPostClientStepper(true);
+    updateStepStatus(setPostClientSteps, 0, "loading");
     const schemaEncoder = new SchemaEncoder(
       "string clientName,address clientAddress,string clientBio,string[] category,uint256 reputationScore,uint256 noOfJobsPosted,uint256 noOfDisputesRaised,uint256 noOfDisputesWon"
     );
@@ -73,7 +81,10 @@ const ClientProfileSetupModal: React.FC<ProfileSetupModalProps> = ({
     });
 
     const newAttestationUID = await tx.wait();
+    updateStepStatus(setPostClientSteps, 0, "complete");
+
     try {
+      updateStepStatus(setPostClientSteps, 1, "loading");
       const dataStoredinDb = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/client`,
         {
@@ -86,7 +97,15 @@ const ClientProfileSetupModal: React.FC<ProfileSetupModalProps> = ({
       );
 
       console.log(dataStoredinDb);
+
+      updateStepStatus(setPostClientSteps, 1, "complete");
     } catch (error) {
+      const currentStep = postClientSteps.findIndex(
+        (step) => step.status === "loading"
+      );
+      if (currentStep !== -1) {
+        updateStepStatus(setPostClientSteps, currentStep, "error");
+      }
       console.log(error);
     }
 
@@ -96,6 +115,11 @@ const ClientProfileSetupModal: React.FC<ProfileSetupModalProps> = ({
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-[#FDF7F0] rounded-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <StepperModal
+          isOpen={postClientStepper}
+          steps={postClientSteps}
+          title="Creating Client Profile"
+        />
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-black text-[#1E3A8A]">
             Set Up Your Profile
