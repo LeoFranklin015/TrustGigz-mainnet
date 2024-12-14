@@ -40,6 +40,8 @@ import { PinataSDK } from "pinata-web3";
 import Link from "next/link";
 import { createWeb3Name } from "@web3-name-sdk/core";
 import { resolveAddressToName } from "@/lib/spaceID/fetchWeb3Name";
+import { StepperModal, StepStatus } from "@/components/modals/Stepper";
+import { ApplicationStepper } from "@/components/modals/Stepper";
 
 const GigPage = ({ params }: { params: { uid: string } }) => {
   const [proposal, setProposal] = useState("");
@@ -153,12 +155,33 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
     setProposal("");
   };
 
+  // Stepper for application
+  const [applicationSteps, setApplicationSteps] = useState([
+    { label: "Attestation", status: "idle" as StepStatus },
+    { label: "Contract Interaction", status: "idle" as StepStatus },
+    { label: "Indexing", status: "idle" as StepStatus },
+  ]);
+
+  const [isAccepting, setIsAccepting] = useState(false);
+  const updateStepStatus = (
+    index: number,
+    status: "idle" | "loading" | "complete" | "error"
+  ) => {
+    setApplicationSteps((steps: any) =>
+      steps.map((step: any, i: any) =>
+        i === index ? { ...step, status } : step
+      )
+    );
+  };
+
   const handleApplicationAccept = async (
     applicantUID: string,
     applicantAddress: string
   ) => {
     // This is where we write the agreement
+    setIsAccepting(true);
     try {
+      updateStepStatus(0, "loading");
       const schemaEncoder = new SchemaEncoder(gigAgreement);
       const encodedData = schemaEncoder.encodeData([
         { name: "gigTitle", value: gig.gigName, type: "string" },
@@ -187,8 +210,10 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
       });
       const agreementUID = await tx.wait();
       console.log(agreementUID);
+      updateStepStatus(0, "complete");
 
       //Write to contract
+      updateStepStatus(1, "loading");
       const txhash = await walletClient.writeContract({
         account: address!,
         address: gig.gigContractAddress,
@@ -197,8 +222,14 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
         args: [applicantAddress, agreementUID],
       });
       console.log(txhash);
+      const reciept = await publicClient.waitForTransactionReceipt({
+        hash: txhash,
+      });
+      updateStepStatus(1, "complete");
 
       // Store this in db to index
+
+      updateStepStatus(2, "loading");
       const response = await axios.put(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gig/${gig.uid}`,
         {
@@ -210,8 +241,17 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
         }
       );
       console.log(response.data);
+      updateStepStatus(2, "complete");
     } catch (error) {
+      const currentStep = applicationSteps.findIndex(
+        (step) => step.status === "loading"
+      );
+      if (currentStep !== -1) {
+        updateStepStatus(currentStep, "error");
+      }
       console.log(error);
+    } finally {
+      setTimeout(() => setIsAccepting(false), 2000);
     }
   };
 
@@ -305,6 +345,7 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
     <div className="min-h-screen bg-[#FDF7F0] py-12 px-4">
       <Navbar />
       <div className="container mx-auto max-w-4xl mt-4">
+        <StepperModal isOpen={isAccepting} steps={applicationSteps} />
         <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A] radius-2xl">
           <CardHeader>
             <CardTitle className="text-3xl font-black text-[#1E3A8A]">

@@ -13,6 +13,12 @@ import { decodeEventLog, parseEther } from "viem";
 import { BAS, SchemaEncoder } from "@bnb-attestation-service/bas-sdk";
 import { bscTestnet } from "viem/chains";
 import axios from "axios";
+import {
+  ApplicationStepper,
+  StepperModal,
+  StepStatus,
+} from "../modals/Stepper";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 export default function PostJob() {
   const [title, setTitle] = useState("");
@@ -24,6 +30,13 @@ export default function PostJob() {
   const [registerdClient, setRegisteredClient] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
   const [client, setClient] = useState<any | null>(null);
+
+  const [postGigSteps, setPostGigSteps] = useState([
+    { label: "Contract Interaction", status: "idle" as StepStatus },
+    { label: "Attestation", status: "idle" as StepStatus },
+    { label: "Indexing", status: "idle" as StepStatus },
+  ]);
+  const [postGigStepper, setPostGigStepper] = useState(false);
 
   const BASContractAddress = "0x6c2270298b1e6046898a322acB3Cbad6F99f7CBD"; //bnb testnet
   const bas = new BAS(BASContractAddress);
@@ -63,9 +76,22 @@ export default function PostJob() {
     }
   }, [registerdClient]);
 
+  const updateStepStatus = (
+    index: number,
+    status: "idle" | "loading" | "complete" | "error"
+  ) => {
+    setPostGigSteps((steps: any) =>
+      steps.map((step: any, i: any) =>
+        i === index ? { ...step, status } : step
+      )
+    );
+  };
+
   const createGig = async () => {
     // Create a gig in the contract.
+    setPostGigStepper(true);
     try {
+      updateStepStatus(0, "loading");
       const txhash = await walletClient.writeContract({
         account: address!,
         address: gigFactoryAddress,
@@ -85,6 +111,7 @@ export default function PostJob() {
         hash: txhash,
       });
       console.log(reciept.logs);
+      updateStepStatus(0, "complete");
 
       const eventLogs = decodeEventLog({
         abi: GigFactoryContractABI,
@@ -96,6 +123,8 @@ export default function PostJob() {
       const gigContarctAddress = (eventLogs.args as any).GigContract;
 
       // Create the GIG in the BAS attestation service.
+
+      updateStepStatus(1, "loading");
 
       const schemeEncoder = new SchemaEncoder(gigSchema);
       const encodedData = schemeEncoder.encodeData([
@@ -126,8 +155,12 @@ export default function PostJob() {
 
       const gigAttestationUID = await tx.wait();
       console.log(gigAttestationUID);
+      if (gigAttestationUID) {
+        updateStepStatus(1, "complete");
+      }
 
       // Store the Attestion in Backend to index.
+      updateStepStatus(2, "loading");
       const dbData = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gig`,
         {
@@ -144,8 +177,21 @@ export default function PostJob() {
         }
       );
       console.log(dbData);
+      if (dbData) {
+        updateStepStatus(2, "complete");
+      }
     } catch (error) {
+      const currentStep = postGigSteps.findIndex(
+        (step) => step.status === "loading"
+      );
+      if (currentStep !== -1) {
+        updateStepStatus(currentStep, "error");
+      }
       console.log(error);
+    } finally {
+      setTimeout(() => setPostGigStepper(false), 3000);
+      // navigate("/");
+      window.location.href = "/gigs";
     }
   };
 
@@ -158,6 +204,7 @@ export default function PostJob() {
           onClose={() => setIsOpen(false)}
         />
       )}
+      <StepperModal isOpen={postGigStepper} steps={postGigSteps} />
       <div className="container mx-auto max-w-2xl">
         <h1 className="text-4xl font-black text-[#1E3A8A] mb-8 text-center mt-4">
           Post a New Gig

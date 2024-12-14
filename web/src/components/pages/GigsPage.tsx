@@ -57,9 +57,9 @@ export default function GigsPage() {
           }
           if (
             gig.isAccepted == true &&
-            gig.freelancerAddress == address &&
-            gig.isCompleted == false &&
-            gig.isDisputed == false
+            gig.freelancerAddress == address?.toLowerCase() &&
+            gig.IsCompleted == false &&
+            (gig.isDisputed == false || gig.isDisputed == null)
           ) {
             yourGigs.push(gig);
           }
