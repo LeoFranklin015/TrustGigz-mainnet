@@ -35,7 +35,11 @@ import { GigContractABI } from "@/lib/abis/GigContract";
 import { decodeEventLog } from "viem";
 import { VideoPlayer } from "@/components/ui/videoPlayer";
 import { PinataSDK } from "pinata-web3";
-import { StepStatus, updateStepStatus } from "@/components/modals/Stepper";
+import {
+  StepperModal,
+  StepStatus,
+  updateStepStatus,
+} from "@/components/modals/Stepper";
 
 const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
   const [clientFavor, setClientFavor] = useState(50);
@@ -282,6 +286,10 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
         updateStepStatus(setResolveDisputeSteps, currentStep, "error");
       }
       console.log(error);
+    } finally {
+      setTimeout(() => {
+        setIsResolveDisputeSubmitted(false);
+      }, 2000);
     }
   };
 
@@ -336,6 +344,11 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
     <div className="min-h-screen bg-[#FDF7F0]">
       <Navbar />
       <div className="container mx-auto px-4 py-8">
+        <StepperModal isOpen={isDecisionSubmitted} steps={decisionSteps} />
+        <StepperModal
+          isOpen={isResolveDisputeSubmitted}
+          steps={resolveDisputeSteps}
+        />
         <h1 className="text-4xl font-black text-[#1E3A8A] mb-8">
           Dispute Resolution
         </h1>

@@ -385,7 +385,8 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
       const reponse = await axios.put(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/gig/${gig.uid}`,
         {
-          isCompleted: true,
+          IsCompleted: true,
+          decision: "Accepted by the client",
         }
       );
       console.log(reponse.data);
@@ -574,7 +575,7 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
           </div>
         )}
 
-        {gig.isAccepted && gig.IsSubmitted && videoUrl && (
+        {gig.isAccepted && gig.IsSubmitted && videoUrl && !gig.IsCompleted && (
           <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A]">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-[#1E3A8A]">
@@ -624,6 +625,24 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
                     </Link>
                   </div>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+        {gig.IsCompleted && (
+          <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A]">
+            <CardHeader>
+              <CardTitle className="text-2xl font-bold text-[#1E3A8A]">
+                Work Completed
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-4 flex flex-col gap-2">
+                <div className="flex flex-col gap-2 border-2 border-[#1E3A8A] p-1">
+                  <p className="text-[#1E3A8A]">Score : {gig.AIScore}</p>
+                  <p className="text-[#1E3A8A]">Feedback : {gig.AIFeedback}</p>
+                  <p className="text-[#1E3A8A]">Decision : {gig.decision}</p>
+                </div>
               </div>
             </CardContent>
           </Card>
