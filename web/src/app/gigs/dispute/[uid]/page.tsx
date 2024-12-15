@@ -323,14 +323,14 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
 
   const verify = async () => {
     try {
-      const appid = "5c791946-486c-4939-b8fa-ed022dfd4c4a";
+      const appid = "f89cadfe-2b80-456d-91a9-371b790adf97";
 
       const connector = new TransgateConnect(appid);
 
       const isAvailable = await connector.isTransgateAvailable();
 
       if (isAvailable) {
-        const schemaId = "e2b921f5f6744ef9bb6aab5ee1623a76";
+        const schemaId = "6303de1d87314765af37ae0e6fbf1b13";
         const res: any = await connector.launch(schemaId);
 
         console.log(res);
