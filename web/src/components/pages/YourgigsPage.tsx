@@ -8,7 +8,7 @@ import axios from "axios";
 import { GigCard } from "@/components/ui/GigCard";
 import { Card, CardContent } from "../ui/card";
 import { Button } from "../ui/button";
-import { DomainRegistrationModal } from "../modals/DomainRegistrationModal";
+// import { DomainRegistrationModal } from "../modals/DomainRegistrationModal";
 
 export default function GigsPage() {
   const { address } = useAccount();
@@ -69,10 +69,10 @@ export default function GigsPage() {
     isBrowser && (
       <div className="min-h-screen bg-[#FDF7F0] py-12 px-4">
         <Navbar />
-        <DomainRegistrationModal
+        {/* <DomainRegistrationModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
-        />
+        /> */}
         <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A] bg-[#FFE1A1]">
           <CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-[#1E3A8A] font-medium text-center sm:text-left">
