@@ -1,6 +1,6 @@
 import { createPublicClient, createWalletClient, custom } from "viem";
 import { bsc } from "viem/chains";
-import { ethers } from "ethers";
+import { ethers } from "ethers6";
 import { useMemo } from "react";
 import { useWalletClient } from "wagmi";
 

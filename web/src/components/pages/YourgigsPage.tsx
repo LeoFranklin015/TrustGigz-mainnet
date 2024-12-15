@@ -6,6 +6,9 @@ import { useAccount } from "wagmi";
 
 import axios from "axios";
 import { GigCard } from "@/components/ui/GigCard";
+import { Card, CardContent } from "../ui/card";
+import { Button } from "../ui/button";
+import { DomainRegistrationModal } from "../modals/DomainRegistrationModal";
 
 export default function GigsPage() {
   const { address } = useAccount();
@@ -49,6 +52,7 @@ export default function GigsPage() {
 
   const [isOpen, setIsOpen] = useState(true);
   const [registeredFreelancer, setRegisteredFreelancer] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     // Check if the code is running in the browser (client-side)
@@ -65,6 +69,24 @@ export default function GigsPage() {
     isBrowser && (
       <div className="min-h-screen bg-[#FDF7F0] py-12 px-4">
         <Navbar />
+        <DomainRegistrationModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
+        <Card className="mb-8 border-2 border-[#1E3A8A] shadow-[0_6px_0_0_#1E3A8A] bg-[#FFE1A1]">
+          <CardContent className="p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-[#1E3A8A] font-medium text-center sm:text-left">
+              People can recognize you and your work easily with your domain
+              name. Register now to get your domain.
+            </p>
+            <Button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-[#FF5C00] text-white border-2 border-[#1E3A8A] shadow-[0_4px_0_0_#1E3A8A] hover:shadow-[0_2px_0_0_#1E3A8A] hover:translate-y-[2px] transition-all"
+            >
+              Register
+            </Button>
+          </CardContent>
+        </Card>
         <div className="container mx-auto flex flex-col gap-2">
           <div>
             <h1 className="text-4xl font-black text-[#1E3A8A] mb-8 text-center mt-4">
