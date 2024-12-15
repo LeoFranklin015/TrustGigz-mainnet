@@ -27,7 +27,7 @@ export const FetchWeb3Name = async (web3name: any, address: any) => {
   }
 };
 
-export const resolveAddressToName = async (web3name: any, address: string) => {
+export const resolveAddressToName = async (address: string) => {
   try {
     const bnb_response = await axios.get(
       `https://api.prd.space.id/v1/getName?tld=bnb&address=${address}`

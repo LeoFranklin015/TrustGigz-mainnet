@@ -58,7 +58,6 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
   const [resolvedFreelancerAddress, setResolvedFreelancerAddress] =
     useState("");
   const [refresh, setRefresh] = useState(false);
-  const web3name = createWeb3Name();
 
   const pinata = new PinataSDK({
     pinataJwt: process.env.PINATA_JWT!,
@@ -75,9 +74,7 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
         setGig(response.data[0]);
         setIsClient(response.data[0].clientAddress == address?.toLowerCase());
         const clientResolvedname: any = await resolveAddressToName(
-          web3name,
-          // response.data[0].clientAddress
-          "0xe6FC3609233197e54f9A0b1C051534bec6ECf79b"
+          response.data[0].clientAddress
         );
         setResolvedClientAddress(
           clientResolvedname
@@ -89,7 +86,6 @@ const GigPage = ({ params }: { params: { uid: string } }) => {
 
         if (response.data[0].isAccepted) {
           const freelancerResolvedname = await resolveAddressToName(
-            web3name,
             response.data[0].freelancerAddress
           );
 

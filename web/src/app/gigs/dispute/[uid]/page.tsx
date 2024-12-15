@@ -40,6 +40,7 @@ import {
   StepStatus,
   updateStepStatus,
 } from "@/components/modals/Stepper";
+import { resolveAddressToName } from "@/lib/spaceID/fetchWeb3Name";
 
 const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
   const [clientFavor, setClientFavor] = useState(50);
@@ -49,6 +50,9 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
   const [verified, setVerified] = useState<Boolean | null>(null);
   const [disputes, setDisputes] = useState<any>(null);
   const [videoUrl, setVideoUrl] = useState<string>("");
+  const [resolvedClientAddress, setResolvedClientAddress] = useState("");
+  const [resolvedFreelancerAddress, setResolvedFreelancerAddress] =
+    useState("");
 
   const BASContractAddress = "0x247Fe62d887bc9410c3848DF2f322e52DA9a51bC"; // bnb mainnet
   const bas = new BAS(BASContractAddress);
@@ -165,6 +169,30 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
         );
         console.log(response.data[0]);
         setGig(response.data[0]);
+        const clientResolvedname: any = await resolveAddressToName(
+          response.data[0].clientAddress
+        );
+        setResolvedClientAddress(
+          clientResolvedname
+            ? clientResolvedname
+            : response.data[0].clientAddress.slice(0, 4) +
+                "..." +
+                response.data[0].clientAddress.slice(-4)
+        );
+
+        if (response.data[0].isAccepted) {
+          const freelancerResolvedname = await resolveAddressToName(
+            response.data[0].freelancerAddress
+          );
+
+          setResolvedFreelancerAddress(
+            freelancerResolvedname
+              ? freelancerResolvedname
+              : response.data[0].freelancerAddress.slice(0, 4) +
+                  "..." +
+                  response.data[0].freelancerAddress.slice(-4)
+          );
+        }
       } catch (error) {
         console.error("Error fetching gig:", error);
       }
@@ -396,8 +424,7 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
               <div className="flex items-center bg-[#FDF7F0] p-3 rounded-lg">
                 <User className="text-[#FF5C00] mr-3" size={24} />
                 <span className="text-[#1E3A8A] font-bold text-lg">
-                  Client: {gig.clientAddress.slice(0, 6)}...
-                  {gig.clientAddress.slice(-4)}
+                  Client: {resolvedClientAddress}
                 </span>
               </div>
             </div>
@@ -411,8 +438,7 @@ const DisputeResolutionPage = ({ params }: { params: { uid: string } }) => {
             <div className="flex items-center bg-[#FDF7F0] p-3 rounded-lg">
               <Users className="text-[#FF5C00] mr-3" size={24} />
               <span className="text-[#1E3A8A] font-bold text-lg">
-                Freelancer: {gig.freelancerAddress.slice(0, 6)}...
-                {gig.freelancerAddress.slice(-4)}
+                Freelancer: {resolvedFreelancerAddress}
               </span>
             </div>
           </CardContent>
